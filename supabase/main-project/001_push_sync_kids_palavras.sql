@@ -2,10 +2,10 @@
 -- RODAR NO PROJETO PRINCIPAL (Sistema Videira - ctobdkstnrhepixyujms).
 --
 -- Sincroniza public.palavras com o Sistema Kids (mxuvvsklqaelvxmpnzhe)
--- em tempo real. A cada INSERT ou UPDATE em public.palavras a trigger
--- chama a Edge Function clonar-palavra, que faz upsert em rk_palavras
--- pelo campo origem_id. O INSERT no Kids dispara a notificacao de push
--- para os assinantes do Kids.
+-- em tempo real. A cada INSERT, UPDATE ou DELETE em public.palavras a
+-- trigger chama a Edge Function clonar-palavra, que faz upsert/delete em
+-- rk_palavras pelo campo origem_id. O INSERT no Kids dispara a
+-- notificacao de push para os assinantes do Kids.
 --
 -- Pre-requisitos: extensoes pg_net e supabase_vault habilitadas.
 --
@@ -29,6 +29,7 @@ as $function$
 declare
   v_secret text;
   v_url text := 'https://mxuvvsklqaelvxmpnzhe.supabase.co/functions/v1/clonar-palavra';
+  v_record jsonb;
 begin
   select decrypted_secret
     into v_secret
@@ -40,6 +41,8 @@ begin
     return new;
   end if;
 
+  v_record := case when tg_op = 'DELETE' then to_jsonb(old) else to_jsonb(new) end;
+
   perform net.http_post(
     url := v_url,
     headers := jsonb_build_object(
@@ -49,7 +52,7 @@ begin
     body := jsonb_build_object(
       'type', tg_op,
       'table', tg_table_name,
-      'record', to_jsonb(new)
+      'record', v_record
     ),
     timeout_milliseconds := 5000
   );
@@ -60,5 +63,5 @@ $function$;
 
 drop trigger if exists push_sync_kids_palavras on public.palavras;
 create trigger push_sync_kids_palavras
-after insert or update on public.palavras
+after insert or update or delete on public.palavras
 for each row execute function public.push_sync_kids_palavras();

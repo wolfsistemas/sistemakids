@@ -55,6 +55,17 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
   );
 
+  if (body.type === "DELETE") {
+    const { error } = await sb
+      .from("rk_palavras")
+      .delete()
+      .eq("origem_id", origemId);
+    if (error) {
+      return json(500, { ok: false, error: error.message });
+    }
+    return json(200, { ok: true, tipo: "DELETE", origem_id: origemId });
+  }
+
   const payload = {
     origem_id: origemId,
     data: (record.data as string) ?? null,

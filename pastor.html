@@ -1317,21 +1317,16 @@
                 renderizarAgenda(listaAgenda);
             } catch(e) { renderizarAgenda([]); }
 
-            // 6. Palavras
-             // 7. Palavras (via Google Script – planilha, aba "palavras", igual ao backup do Supabase)
+            // 7. Palavras (Supabase - rk_palavras, sincronizado do Sistema Videira)
             try {
-                const controllerPal = new AbortController();
-                const timeoutPal = setTimeout(() => controllerPal.abort(), 8000); // nunca trava o restante do carregamento
-                const resPal = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'buscarPalavras', payload: { usuarioAtivo: sessionStorage.getItem('usuarioLogado') } }),
-                    signal: controllerPal.signal
-                });
-                clearTimeout(timeoutPal);
-                const jsonPal = await resPal.json();
-                listaPalavras = (jsonPal && jsonPal.status === 'sucesso') ? (jsonPal.dados || []) : [];
+                const { data: palavrasData, error: palError } = await supabaseClient
+                    .from('rk_palavras')
+                    .select('data, tema, texto, link_youtube')
+                    .order('data', { ascending: false });
+                if (palError) throw palError;
+                listaPalavras = palavrasData || [];
             } catch(e) {
-                console.warn('Palavras (GAS) indisponível ainda:', e);
+                console.warn('Palavras indisponíveis:', e);
                 listaPalavras = [];
             }
             renderizarPalavras(listaPalavras);
