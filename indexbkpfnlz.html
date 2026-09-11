@@ -102,23 +102,6 @@
 </head>
 <body>
 
-    <script>
-        // Se houver algum Service Worker antigo controlando a página, desregistra ele imediatamente
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-            });
-        }
-        // Limpa os caches armazenados pelo PWA
-        if ('caches' in window) {
-            caches.keys().then(function(names) {
-                for (let name of names) caches.delete(name);
-            });
-        }
-    </script>
-
     <div id="tela-login">
         <div class="card-login">
             

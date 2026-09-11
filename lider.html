@@ -1541,6 +1541,9 @@
         sessionStorage.setItem('usuarioLogado', pessoa.nome || user.email);
         sessionStorage.setItem('loginDigitado', user.email);
 
+        // Ativa o Web Push SEM await (nunca bloquear o login)
+        if (window.VideiraPush) VideiraPush.ativar(supabaseClient);
+
         await carregarTudo();
         inicializarEventos();
         await carregarAnotacoes();
@@ -3254,5 +3257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <source src="https://streaming.vinhafm.com.br/stream" type="audio/mpeg">
     </audio>
 
+    <script src="js/push.js"></script>
+    <script src="js/pwa.js"></script>
 </body>
 </html>
