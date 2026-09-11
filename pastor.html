@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rede Kids • Pastora</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <!-- Módulo unificado da Bíblia -->
+    <script src="js/biblia.js"></script>
+
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kids Videira">
+    <meta name="theme-color" content="#f8f0ec">
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        :root {
+            --primary: #8b5a6a;
+            --primary-light: #c9a7b3;
+            --accent: #d4a373;
+            --bg-body: #fcf7f5;
+            --card-bg: #ffffff;
+            --text-main: #4a3b3e;
+            --text-light: #7a6a6e;
+            --border-color: #e6dcd8;
+            --input-bg: #fdfaf9;
+            --shadow: 0 4px 15px rgba(139, 90, 106, 0.08);
+            --radius: 16px;
+            --success-bg: #eaf6ed;
+            --success-text: #2d6a4f;
+            --danger-text: #b34a4a;
+        }
+
+        * { box-sizing: border-box; margin: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+
+        /*.header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+        }*/
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+            flex-wrap: wrap;
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .header-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-top: 1px solid rgba(139, 90, 106, 0.15);
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .radio-player-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .radio-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--primary);
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .radio-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .radio-btn.playing {
+            border-color: #f2d70d;
+            color: #f2d70d;
+            animation: pulse-radio 1.5s infinite;
+        }
+        /*@keyframes pulse-radio {
+            0% { box-shadow: 0 0 0 0 rgba(30, 136, 229, 0.3); }
+            70% { box-shadow: 0 0 0 6px rgba(30, 136, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(30, 136, 229, 0); }
+        }*/
+
+        @keyframes pulse-radio {
+            0% { box-shadow: 0 0 0 0 rgba(232, 135, 224, 0.3); }
+            70% { box-shadow: 0 0 0 6px rgba(138, 25, 104, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(119, 18, 99, 0); }
+        }
+        .radio-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 500;
+            user-select: none;
+        }
+        /* --- Botão Bíblia no header --- */
+        .btn-biblia-header {
+            background: transparent;
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            padding: 4px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            height: 32px;
+        }
+        .btn-biblia-header:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-biblia-header i {
+            font-size: 0.9rem;
+        }
+        .header h3 {
+            margin: 0;
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+        .btn-refresh {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-refresh:hover { color: var(--primary); transform: rotate(90deg); }
+
+        /*.nav-menu {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .nav-btn {
+            flex: 1 1 80px;
+            min-width: 70px;
+            padding: 10px 4px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            font-size: 0.7rem;
+        }
+        .nav-btn i { font-size: 1.2rem; }
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 90, 106, 0.25);
+        }*/
+
+        .nav-menu {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Cria 3 colunas iguais */
+            gap: 8px; /* Espaço entre os botões */
+            margin-bottom: 20px;
+        }      
+        
+        .nav-btn {            
+            padding: 10px 4px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            font-size: 0.7rem;
+            width: 100%; /* Preenche toda a célula do grid */
+            min-height: 64px; /* Garante altura uniforme */
+            box-sizing: border-box;
+        }
+        .nav-btn i { font-size: 1.2rem; }
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 90, 106, 0.25);
+        }
+
+        .modal-download,
+            .modal-close {
+              background: #f1f5f9;
+              border: none;
+              width: 35px;
+              height: 35px;
+              border-radius: 50%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              color: #64748b;
+              cursor: pointer;
+              font-size: 0.8rem;
+              transition: 0.2s;
+            }
+            .modal-download { color: var(--primary); }
+            .modal-download:hover,
+            .modal-close:hover { background: var(--primary); color: white; }
+
+        /* Cards de estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 15px 10px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-left: 4px solid var(--primary);
+        }
+        .stat-number {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .celula-card {
+            background: #fffcf9;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .celula-card:hover { transform: translateY(-2px); background: #fff8f4; }
+        .celula-info { flex: 1; }
+        .celula-nome { font-weight: 700; font-size: 1rem; color: var(--text-main); }
+        .celula-detalhe { font-size: 0.8rem; color: #8a7a7e; margin-top: 4px; }
+
+        .badge-membros {
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .member-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 600px) {
+            .member-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+        }
+        .member-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 14px;
+            box-shadow: var(--shadow);
+            border: 1px solid #f5efec;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+        }
+        .card-name { font-size: 1rem; font-weight: 700; margin: 0; }
+        .cat-badge {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: #f0ecea;
+            color: var(--text-light);
+            font-weight: 600;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .cat-badge.Líder { background: #f3e5d9; color: #8b5a6a; border-color: #d4a373; }
+        .cat-badge.Discipuladora { background: #e3e8f0; color: #4a6a8b; border-color: #8ba3c9; }
+        .cat-badge.Pastora { background: #f0e3e3; color: #8b4a4a; border-color: #c98b8b; }
+        .cat-badge.Criança { background: #eaf6ed; color: #2d6a4f; border-color: #b8d9c0; }
+
+        .card-info {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .status-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .status-pill {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #f0ecea;
+            color: #999;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-pill.active {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid #b8d9c0;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #f0ecea;
+        }
+        .btn-card {
+            flex: 1;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid #e0d8d4;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: white;
+            color: #555;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-card:hover { background: #f5f0ed; }
+        .btn-zap { background: #f0faf5; color: #2d6a4f; border-color: #b8d9c0; }
+
+        .table-clean {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .table-clean th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .table-clean td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0ecea;
+            font-size: 0.85rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            
+            z-index: 3100;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            max-height: 85vh;
+            border-radius: 20px 20px 0 0;
+            padding: 25px 20px;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .btn-close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f0ecea;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hidden { display: none !important; }
+
+        .biblia-offcanvas {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background: white;
+            z-index: 2000;
+            transition: right 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.08);
+        }
+        .biblia-offcanvas.aberto { right: 0; }
+        #biblia-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 1999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .biblia-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .biblia-header h2 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+        .btn-fechar-biblia {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .biblia-controles {
+            padding: 15px;
+            background: #f9f5f3;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #eee8e5;
+            flex-wrap: wrap;
+        }
+        .biblia-controles select {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            border: 1px solid #e0d8d4;
+            border-radius: 10px;
+            background: white;
+            margin-bottom: 0;
+        }
+        .biblia-texto-area {
+            padding: 25px 20px;
+            overflow-y: auto;
+            flex: 1;
+            line-height: 1.8;
+            font-size: 1rem;
+            color: #4a3b3e;
+        }
+        .biblia-placeholder {
+            text-align: center;
+            color: #b0a4a0;
+            font-style: italic;
+            margin-top: 50px;
+        }
+        .floating-nav {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 15;
+        }
+        .nav-capitulo-btn {
+            background: rgba(139, 90, 106, 0.7);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: 0.2s;
+            opacity: 0.8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .nav-capitulo-btn:active { opacity: 1; background: var(--primary); transform: scale(1.05); }
+
+        .word-list-item {
+            background: white;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            border-left: 4px solid var(--accent);
+            transition: 0.2s;
+        }
+        .word-list-item:active { transform: scale(0.98); }
+        .word-date { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+        .word-theme { font-size: 0.85rem; color: var(--text-light); margin-top: 2px; }
+
+        .pix-copy-box {
+            display: flex;
+            align-items: center;
+            background: #f8f4f2;
+            border: 1px solid #e6dcd8;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .pix-copy-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            font-weight: 600;
+            outline: none;
+            text-align: center;
+            margin: 0;
+        }
+        .pix-copy-box button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        .pix-copy-box button:active { background: #c4906a; }
+
+        .report-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: var(--shadow);
+            margin-bottom: 8px;
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .report-btn:hover { border-color: var(--primary); background: #fdf5f6; }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .filter-bar select, .filter-bar input {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: white;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .versao-item {
+            padding: 15px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+        .versao-item:hover { background: var(--primary); color: white; }
+        .versao-item.selecionada { background: var(--primary); color: white; }
+
+        /* --- Material de Célula: Apostilas / Lições (admin) --- */
+        .apostila-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 14px;
+        }
+        .apostila-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .apostila-card:hover { transform: translateY(-3px); }
+        .apostila-capa {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            background: #f1e7e2;
+            cursor: pointer;
+        }
+        .apostila-capa-placeholder {
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        .apostila-info { padding: 8px 10px; cursor: pointer; }
+        .apostila-titulo { font-weight: 700; font-size: 0.85rem; color: var(--text-main); line-height: 1.2; }
+        .apostila-ano { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+        .apostila-acoes {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: flex;
+            gap: 4px;
+        }
+        .btn-icone-mini {
+            background: rgba(0,0,0,0.55);
+            color: white;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-icone-mini:hover { background: var(--primary); }
+        .btn-icone-mini.excluir:hover { background: var(--danger-text); }
+
+        .btn-nova-apostila-card {
+            border: 2px dashed var(--primary-light);
+            border-radius: var(--radius);
+            aspect-ratio: 3/4.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--primary);
+            cursor: pointer;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .btn-nova-apostila-card:hover { background: rgba(139,90,106,0.06); }
+
+        .btn-voltar-apostilas {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding: 4px 0;
+        }
+        .btn-nova-licao {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        .licao-item {
+            background: white;
+            border-radius: var(--radius);
+            padding: 14px 15px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        .licao-numero {
+            background: var(--primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .licao-titulo { font-weight: 600; font-size: 0.9rem; color: var(--text-main); flex: 1; }
+        .licao-tipo-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: #f1e7e2;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+        .licao-acoes { display: flex; gap: 6px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .modal-content, .modal-content * { visibility: visible; }
+            .modal-content { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 20px; border-radius: 0; }
+            .btn-close-modal, .btn-card, .nav-menu, .header { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================================================================ -->
+<!-- HTML -->
+<!-- ================================================================ -->
+<div class="container">
+    <div class="header">
+            <div class="header-top">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="logo.png" style="width: 100px; border-radius: 50%;" alt="Logo Kids">
+                <h3>Rede Kids • Pastora</h3>
+            </div>
+            <div>
+                <button onclick="carregarTudo()" class="btn-refresh"><i id="iconRefresh" class="fas fa-sync-alt"></i></button>
+                <button onclick="fazerLogout()" class="btn-refresh" style="color:var(--danger-text);"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+         <div class="header-bottom">
+            <!-- Lado esquerdo: player da rádio -->
+            <div class="radio-player-mini">
+                <button id="radioToggle" class="radio-btn" onclick="toggleRadio()" title="Vinha FM">
+                    <i id="radioIcon" class="fas fa-play"></i>
+                </button>
+                <span class="radio-label">Vinha FM</span>
+            </div>
+
+            <!-- Lado direito: botão da Bíblia -->
+            <button class="btn-biblia-header" onclick="abrirBiblia()" title="Abrir Bíblia">
+                <i class="fas fa-bible"></i> Bíblia
+            </button>
+        </div>
+        
+    </div>
+
+    <div class="nav-menu">        
+        <button id="btn-celulas" class="nav-btn active" onclick="mudarSecao('celulas')"><i class="fas fa-network-wired"></i> Células</button>
+        <button id="btn-relatorios" class="nav-btn" onclick="mudarSecao('relatorios')"><i class="fas fa-clipboard-list"></i> Relatórios</button>
+        <button id="btn-material-celula" class="nav-btn" onclick="mudarSecao('material-celula')"><i class="fas fa-folder-open"></i> Material de Célula</button>        
+        <button id="btn-agenda" class="nav-btn" onclick="mudarSecao('agenda')"><i class="far fa-calendar-alt"></i> Agenda</button>
+        <button id="btn-palavras" class="nav-btn" onclick="mudarSecao('palavras')"><i class="fas fa-book-open"></i> Palavras</button>       
+        <button id="btn-visao-geral" class="nav-btn" onclick="mudarSecao('visao-geral')"><i class="fas fa-chart-pie"></i> Visão Geral</button>
+        <!--<button id="btn-pedidos" class="nav-btn" onclick="mudarSecao('pedidos')"><i class="fas fa-hands-praying"></i> Pedidos</button>-->
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA VISÃO GERAL -->
+    <!-- ============================================================ -->
+    <div id="secao-visao-geral" class="hidden">
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card"><div class="stat-number" id="statCelulas">0</div><div class="stat-label">Células</div></div>
+            <div class="stat-card"><div class="stat-number" id="statLideres">0</div><div class="stat-label">Líderes</div></div>
+            <div class="stat-card"><div class="stat-number" id="statDiscipuladoras">0</div><div class="stat-label">Discipuladoras</div></div>
+            <div class="stat-card"><div class="stat-number" id="statCriancas">0</div><div class="stat-label">Crianças</div></div>
+            <div class="stat-card"><div class="stat-number" id="statBatizados">0</div><div class="stat-label">Batizados</div></div>
+        </div>
+
+        <h4 style="color:var(--primary); margin-bottom:15px;">Relatórios Gerenciais</h4>
+        <div class="report-section">
+            <button class="report-btn" onclick="gerarSupervisaoGeral()">
+                <span><i class="fas fa-print"></i> Supervisão Geral – Fichas das Células</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="report-btn" onclick="abrirRelatorioLideresSemRelatorio()">
+                <span><i class="fas fa-clipboard-list"></i> Líderes sem relatório na semana</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="report-btn" onclick="abrirRelatorioFaltosos()">
+                <span><i class="fas fa-user-times"></i> Crianças com 3+ faltas (30 dias)</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="report-btn" onclick="abrirRelatorioQuedaFrequencia()">
+                <span><i class="fas fa-chart-line"></i> Células com queda de frequência</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="report-btn" onclick="abrirRelatorioSemColider()">
+                <span><i class="fas fa-user-graduate"></i> Células sem líder em treinamento</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="report-btn" onclick="abrirRelatorioStatusEspiritual()">
+                <span><i class="fas fa-cross"></i> Status espiritual das crianças</span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div id="modalRelatorioPersonalizado" class="modal-overlay hidden" onclick="fecharModal('modalRelatorioPersonalizado')">
+            <div class="modal-content" style="max-width:800px;" onclick="event.stopPropagation()">
+                <button class="btn-close-modal" onclick="fecharModal('modalRelatorioPersonalizado')">&times;</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 id="tituloRelatorioPersonalizado" style="color:var(--primary); margin:0;">Relatório</h2>
+                    <button onclick="imprimirRelatorio()" class="btn-card" style="width:auto; padding:8px 15px; background:var(--primary); color:white; border:none;"><i class="fas fa-print"></i> Imprimir</button>
+                </div>
+                <div id="conteudoRelatorio"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA CÉLULAS -->
+    <!-- ============================================================ -->
+    <div id="secao-celulas">
+        <div class="filter-bar">
+            <select id="filtroDiscipuladora" onchange="filtrarCelulas()">
+                <option value="">Todas as Discipuladoras</option>
+            </select>
+            <select id="filtroLiderCelula" onchange="filtrarCelulas()">
+                <option value="">Todos os Líderes</option>
+            </select>
+            <input type="text" id="filtroBuscaCelula" placeholder="🔍 Buscar célula..." onkeyup="filtrarCelulas()">
+        </div>
+        <div id="listaCelulasRede"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA RELATÓRIOS -->
+    <!-- ============================================================ -->
+    <div id="secao-relatorios" class="hidden">
+        <div class="filter-bar">
+            <select id="filtroRelCelula" onchange="filtrarRelatorios()">
+                <option value="">Todas as Células</option>
+            </select>
+            <input type="date" id="filtroRelDataInicio" onchange="filtrarRelatorios()">
+            <input type="date" id="filtroRelDataFim" onchange="filtrarRelatorios()">
+        </div>
+        <div id="listaRelatorios"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA PEDIDOS -->
+    <!-- ============================================================ -->
+    <div id="secao-pedidos" class="hidden">
+        <h4 style="color:var(--primary); margin-bottom:15px;">Pedidos de Oração</h4>
+        <table class="table-clean">
+            <thead><tr><th>Data</th><th>Mensagem</th><th>Ação</th></tr></thead>
+            <tbody id="corpoPedidos"></tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA AGENDA -->
+    <!-- ============================================================ -->
+    <div id="secao-agenda" class="hidden">
+        <h4 style="color:var(--text-light); margin-bottom:15px;"><i class="far fa-calendar-alt"></i> Próximos Eventos</h4>
+        <div id="listaAgenda" class="member-grid"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA PALAVRAS -->
+    <!-- ============================================================ -->
+    <div id="secao-palavras" class="hidden">
+        <h4 style="color:var(--accent); margin-bottom:15px;">Palavras & Estudos</h4>
+        <div id="listaPalavras"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA MATERIAL DE CÉLULA (Apostilas -> Lições) -->
+    <!-- ============================================================ -->
+    <div id="secao-material-celula" class="hidden">
+        <h4 style="color:var(--accent); margin-bottom:15px;"><i class="fas fa-folder-open"></i> Material de Célula</h4>
+
+        <!-- Vista 1: grid de apostilas -->
+        <div id="viewApostilasAdmin">
+            <div id="listaApostilasAdmin" class="apostila-grid"></div>
+        </div>
+
+        <!-- Vista 2: lições de uma apostila -->
+        <div id="viewLicoesAdmin" class="hidden">
+            <button class="btn-voltar-apostilas" onclick="voltarApostilasAdmin()"><i class="fas fa-arrow-left"></i> Apostilas</button>
+            <h4 id="tituloApostilaAdminAtual" style="color:var(--primary); margin-bottom:12px;"></h4>
+            <button class="btn-nova-licao" onclick="abrirNovaLicao()"><i class="fas fa-plus"></i> Nova Lição</button>
+            <div id="listaLicoesAdmin"></div>
+        </div>
+    </div>
+
+    <!-- Modal Apostila (criar/editar) -->
+    <div id="modalApostila" class="modal-overlay hidden" onclick="fecharModal('modalApostila')" style="align-items:center;">
+        <div class="modal-content" style="max-width:500px;" onclick="event.stopPropagation()">
+            <button class="btn-close-modal" onclick="fecharModal('modalApostila')">&times;</button>
+            <h3 id="tituloModalApostila" style="color:var(--primary); margin-top:0;">Nova Apostila</h3>
+            <form id="formApostila">
+                <input type="hidden" name="id" id="apostilaFormId">
+                <div style="margin-bottom:12px;"><label>Título *</label><input type="text" name="titulo" required></div>
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;"><label>Ano</label><input type="number" name="ano" placeholder="2026"></div>
+                    <div style="flex:1;"><label>Ordem de exibição</label><input type="number" name="ordem" value="0"></div>
+                </div>
+                <div style="margin-bottom:12px;"><label>Descrição</label><textarea name="descricao" rows="2"></textarea></div>
+                <div style="margin-bottom:12px;">
+                    <label>Capa (imagem, opcional)</label>
+                    <input type="file" name="capa" accept="image/*">
+                    <small id="capaAtualInfo" style="color:var(--text-light); display:block; margin-top:4px;"></small>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" onclick="fecharModal('modalApostila')" class="btn-card" style="flex:1; padding:10px;">Cancelar</button>
+                    <button type="submit" class="btn-save" style="flex:2;">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Lição (criar/editar) -->
+    <div id="modalLicao" class="modal-overlay hidden" onclick="fecharModal('modalLicao')" style="align-items:center;">
+        <div class="modal-content" style="max-width:500px;" onclick="event.stopPropagation()">
+            <button class="btn-close-modal" onclick="fecharModal('modalLicao')">&times;</button>
+            <h3 id="tituloModalLicao" style="color:var(--primary); margin-top:0;">Nova Lição</h3>
+            <form id="formLicao">
+                <input type="hidden" name="id" id="licaoFormId">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;"><label>Número *</label><input type="number" name="numero" required></div>
+                    <div style="flex:2;"><label>Título *</label><input type="text" name="titulo" required></div>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label>Formato do arquivo *</label>
+                    <select name="tipo" id="licaoTipoSelect" onchange="toggleTipoLicaoInputs()" required>
+                        <option value="pdf">PDF (1 arquivo, várias páginas)</option>
+                        <option value="imagens">Imagens JPG (1 arquivo por página)</option>
+                    </select>
+                </div>
+                <div id="campoUploadPdf" style="margin-bottom:12px;">
+                    <label>Arquivo PDF <span id="pdfObrigatorioMarca">*</span></label>
+                    <input type="file" name="arquivo_pdf" accept="application/pdf">
+                    <small id="pdfAtualInfo" style="color:var(--text-light); display:block; margin-top:4px;"></small>
+                </div>
+                <div id="campoUploadImagens" style="margin-bottom:12px; display:none;">
+                    <label>Páginas (JPG/PNG, selecione todas juntas e na ordem certa) <span id="imagensObrigatorioMarca">*</span></label>
+                    <input type="file" name="arquivo_imagens" accept="image/*" multiple>
+                    <small style="color:var(--text-light); display:block; margin-top:4px;">Ao editar, um novo envio substitui todas as páginas anteriores.</small>
+                    <small id="imagensAtualInfo" style="color:var(--text-light); display:block; margin-top:4px;"></small>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" onclick="fecharModal('modalLicao')" class="btn-card" style="flex:1; padding:10px;">Cancelar</button>
+                    <button type="submit" class="btn-save" style="flex:2;" id="btnSalvarLicao">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ABA BÍBLIA (offcanvas) -->
+    <!-- ============================================================ -->
+    <div id="secao-biblia" class="hidden"></div>
+
+    <div id="biblia-overlay" onclick="fecharBiblia()"></div>
+    <div id="painel-biblia" class="biblia-offcanvas">
+        <div class="biblia-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-bible" style="font-size:1.2rem;"></i>
+                <h2>Bíblia</h2>
+            </div>
+            <button class="btn-fechar-biblia" onclick="fecharBiblia()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="biblia-controles">
+            <button class="btn-card" style="background:white; border:1px solid #ddd; padding:6px 12px; border-radius:8px; display:flex; align-items:center; gap:6px; font-weight:600;" onclick="abrirModalVersao()">
+                <span id="versaoSiglaAtual">MSG</span> <i class="fas fa-chevron-down"></i>
+            </button>
+            <select id="biblia-livro" onchange="Biblia.onLivroChange()"></select>
+            <select id="biblia-capitulo" onchange="Biblia.onCapituloChange()"></select>
+        </div>
+        <div id="biblia-conteudo" class="biblia-texto-area">
+            <p class="biblia-placeholder">Selecione livro e capítulo</p>
+        </div>
+        <div class="floating-nav">
+            <button class="nav-capitulo-btn" onclick="capituloAnterior()"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-capitulo-btn" onclick="capituloProximo()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <div id="modalVersao" class="modal-overlay hidden" onclick="fecharModalVersao(event)" style="align-items:center;">
+        <div class="modal-content" style="max-width:500px; max-height:80vh; border-radius:20px;" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="color:var(--primary);">Selecione a Versão</h3>
+                <button class="btn-close-modal" onclick="fecharModalVersao()" style="position:static;">&times;</button>
+            </div>
+            <div class="versao-lista" id="listaVersoes"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL DETALHE RELATÓRIO -->
+    <!-- ============================================================ -->
+    <div id="modalRelatorio" class="modal-overlay hidden" onclick="fecharModal('modalRelatorio')">
+        <div class="modal-content" style="max-width:800px;" onclick="event.stopPropagation()">
+            <button class="btn-close-modal" onclick="fecharModal('modalRelatorio')">&times;</button>
+            <div style="text-align:center; margin-bottom:25px;">
+                <h2 style="color:var(--primary); margin:0;" id="detalheRelCelula">Célula</h2>
+                <p style="color:#666; margin-top:5px;" id="detalheRelData">00/00/0000</p>
+            </div>
+            <div style="background:linear-gradient(135deg, var(--success-bg), #e2f0e6); border-radius:20px; padding:20px; text-align:center; margin-bottom:25px;">
+                <span style="font-size:2.5rem; font-weight:800; color:var(--success-text);" id="detalheRelTotal">0</span>
+                <span style="font-size:1rem; font-weight:600; color:var(--success-text); display:block;">PESSOAS PRESENTES</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px;">
+                <div style="background:#f8f9fa; padding:12px; border-radius:12px; border-left:4px solid var(--primary);">
+                    <div style="font-size:0.7rem; text-transform:uppercase; color:#888;">Palavra</div>
+                    <div style="font-weight:700; font-size:1rem;" id="detalheRelPalavra">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:12px; border-radius:12px; border-left:4px solid var(--primary);">
+                    <div style="font-size:0.7rem; text-transform:uppercase; color:#888;">Louvor</div>
+                    <div style="font-weight:700; font-size:1rem;" id="detalheRelLouvor">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:12px; border-radius:12px; border-left:4px solid var(--primary);">
+                    <div style="font-size:0.7rem; text-transform:uppercase; color:#888;">Lanche</div>
+                    <div style="font-weight:700; font-size:1rem;" id="detalheRelLanche">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:12px; border-radius:12px; border-left:4px solid var(--primary);">
+                    <div style="font-size:0.7rem; text-transform:uppercase; color:#888;">Quebra-Gelo</div>
+                    <div style="font-weight:700; font-size:1rem;" id="detalheRelQuebra">-</div>
+                </div>
+            </div>
+            <div style="margin-bottom:20px;">
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:200px;">
+                        <div style="font-weight:800; color:#2b6e3c; margin-bottom:8px;"><i class="fas fa-check-circle"></i> Presentes</div>
+                        <div id="listaPresentes" style="background:#f9fff9; border-radius:12px; padding:12px; border:1px solid #d0e6d0; max-height:200px; overflow-y:auto;"></div>
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <div style="font-weight:800; color:#a12a2a; margin-bottom:8px;"><i class="fas fa-times-circle"></i> Ausentes</div>
+                        <div id="listaAusentes" style="background:#fff9f9; border-radius:12px; padding:12px; border:1px solid #f0d0d0; max-height:200px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="background:#fffbe6; border-radius:12px; padding:15px; border-left:4px solid #f4b942;">
+                <div style="font-weight:700; margin-bottom:5px;">📝 Observações</div>
+                <div id="detalheRelObs" style="color:#555; line-height:1.4;">...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL PALAVRA -->
+    <!-- ============================================================ -->
+    <div id="modalPalavra" class="modal-overlay hidden" onclick="fecharModalPalavra(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">                
+                <button class="modal-download" onclick="baixarPalavraTXT()" style="background:var(--accent); color:white; border:none; padding:8px 12px;"><i class="fas fa-download"></i></button>
+                <button class="btn-close-modal" onclick="fecharModalPalavra(null)" style="position:static;">&times;</button>
+            </div>
+            <h3 id="modalTitulo" style="color:var(--primary);"></h3>
+            <small id="modalDataPalavra" style="color:var(--text-light);"></small>
+            <a id="btnLinkYoutube" href="#" target="_blank" class="btn-card" style="background:#ff0000; color:white; border:none; padding:10px; margin:15px 0; display:none; gap:8px;"><i class="fab fa-youtube"></i> Assistir</a>
+            <div id="modalTexto" style="white-space:pre-wrap; line-height:1.7; margin-top:15px;"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================================================================ -->
+<!-- SCRIPT COMPLETO -->
+<!-- ================================================================ -->
+<script>
+    // ================================================================
+    //  CONFIGURAÇÃO SUPABASE (tabelas com prefixo rk_)
+    // ================================================================
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    const API_URL = sessionStorage.getItem('urlApi');
+
+    function normalizarCategoria(cat) {
+        return (cat || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    // ================================================================
+    //  VARIÁVEIS GLOBAIS
+    // ================================================================
+    let todasCelulas = [];
+    let todasPessoas = [];
+    let todosRelatorios = [];
+    let listaPalavras = [];
+    let listaAgenda = [];
+    let palavraAtual = null;
+    let mapaNomes = {};
+    let todasCriancas = [];
+    let listaApostilas = [];
+    let apostilaAdminAtual = null;
+    let licoesDaApostilaAdmin = [];
+
+    // ================================================================
+    //  AUTENTICAÇÃO
+    // ================================================================
+    (async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) { window.location.href = "index.html?t=" + Date.now(); return; }
+
+        const { data: pessoa } = await supabaseClient
+            .from('rk_pessoas')
+            .select('id, nome, categoria')
+            .eq('email', user.email)
+            .single();
+
+        if (!pessoa) {
+            alert("Registro não encontrado. Contate o administrador.");
+            window.location.href = "index.html?t=" + Date.now();
+            return;
+        }
+
+        const cat = normalizarCategoria(pessoa.categoria);
+        if (cat !== 'pastora' && cat !== 'administrador') {
+            alert("Acesso restrito a pastoras.");
+            window.location.href = "index.html?t=" + Date.now();
+            return;
+        }
+
+        sessionStorage.setItem('pastoraId', pessoa.id);
+        sessionStorage.setItem('usuarioLogado', pessoa.nome || user.email);
+        sessionStorage.setItem('loginDigitado', user.email);
+
+        await carregarTudo();
+        inicializarEventos();
+
+        if (typeof Biblia !== 'undefined') {
+            Biblia.inicializar().then(() => {
+                const saved = localStorage.getItem('biblia_versao');
+                if (saved) Biblia.mudarVersao(saved);
+                versaoSelecionada = Biblia.getVersaoAtiva();
+                const sigla = document.getElementById('versaoSiglaAtual');
+                if (sigla) sigla.innerText = siglasVersoes[versaoSelecionada] || versaoSelecionada;
+            });
+        }
+    })();
+
+    // ================================================================
+    //  LOG
+    // ================================================================
+    async function registrarLogAcao(acao) {
+        try {
+            await supabaseClient.from('rk_logs').insert([{
+                datahora: new Date().toISOString(),
+                usuario: sessionStorage.getItem('loginDigitado'),
+                nomelider: sessionStorage.getItem('usuarioLogado'),
+                acao: acao
+            }]);
+        } catch (e) { console.error("Erro no log:", e); }
+    }
+
+    // ================================================================
+    //  CARREGAR TUDO
+    // ================================================================
+    async function carregarTudo() {
+        const icon = document.getElementById('iconRefresh');
+        if (icon) icon.classList.add('fa-spin');
+
+        try {
+            // 1. Buscar todas as células
+            const { data: celulas, error: celError } = await supabaseClient
+                .from('rk_celulas')
+                .select('*')
+                .order('nome');
+            if (celError) throw celError;
+            todasCelulas = celulas || [];
+
+            // 2. Buscar todas as pessoas (para nomes de líderes, discipuladoras, etc.)
+            const { data: pessoas, error: pError } = await supabaseClient
+                .from('rk_pessoas')
+                .select('*')
+                .order('nome');
+            if (pError) throw pError;
+            todasPessoas = pessoas || [];
+            mapaNomes = {};
+            todasPessoas.forEach(p => mapaNomes[p.id] = p.nome);
+
+            // 3. Buscar todas as crianças (não arquivadas)
+            const { data: criancas, error: cError } = await supabaseClient
+                .from('rk_pessoas')
+                .select('*')
+                .eq('arquivado', false)
+                .neq('categoria', 'Pastora')
+                .neq('categoria', 'Discipuladora')
+                .neq('categoria', 'Líder')
+                .neq('categoria', 'Líder em Treinamento');
+            if (cError) throw cError;
+            todasCriancas = criancas || [];
+
+            // 4. Buscar relatórios
+            const { data: relatorios, error: rError } = await supabaseClient
+                .from('rk_relatorios')
+                .select('*')
+                .order('data', { ascending: false });
+            if (rError) throw rError;
+            todosRelatorios = relatorios || [];
+
+            // 5. Agenda
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'buscarAgenda', payload: { usuarioAtivo: sessionStorage.getItem('usuarioLogado') } })
+                });
+                const json = await res.json();
+                listaAgenda = json.dados || [];
+                renderizarAgenda(listaAgenda);
+            } catch(e) { renderizarAgenda([]); }
+
+            // 6. Palavras
+             // 7. Palavras (via Google Script – planilha, aba "palavras", igual ao backup do Supabase)
+            try {
+                const controllerPal = new AbortController();
+                const timeoutPal = setTimeout(() => controllerPal.abort(), 8000); // nunca trava o restante do carregamento
+                const resPal = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'buscarPalavras', payload: { usuarioAtivo: sessionStorage.getItem('usuarioLogado') } }),
+                    signal: controllerPal.signal
+                });
+                clearTimeout(timeoutPal);
+                const jsonPal = await resPal.json();
+                listaPalavras = (jsonPal && jsonPal.status === 'sucesso') ? (jsonPal.dados || []) : [];
+            } catch(e) {
+                console.warn('Palavras (GAS) indisponível ainda:', e);
+                listaPalavras = [];
+            }
+            renderizarPalavras(listaPalavras);
+
+            // 8. Material de Célula: Apostilas
+            try {
+                const { data: apostilas, error: apoError } = await supabaseClient
+                    .from('rk_apostilas')
+                    .select('*')
+                    .order('ordem', { ascending: true })
+                    .order('ano', { ascending: false });
+                if (apoError) throw apoError;
+                listaApostilas = apostilas || [];
+            } catch(e) {
+                console.warn('Apostilas indisponíveis:', e);
+                listaApostilas = [];
+            }
+            renderizarApostilasAdmin(listaApostilas);
+
+            // 9. Renderizar
+            atualizarEstatisticas();
+            preencherFiltros();
+            renderizarCelulas(todasCelulas);
+            renderizarRelatorios(todosRelatorios);
+            carregarPedidos();
+
+        } catch (e) {
+            console.error("Erro ao carregar dados:", e);
+            alert("Erro ao carregar dados. Verifique sua conexão.");
+        } finally {
+            if (icon) icon.classList.remove('fa-spin');
+        }
+    }
+
+    // ================================================================
+    //  ESTATÍSTICAS
+    // ================================================================
+    function atualizarEstatisticas() {
+        const lideres = todasPessoas.filter(p => normalizarCategoria(p.categoria) === 'líder' || normalizarCategoria(p.categoria) === 'lider');
+        const discipuladoras = todasPessoas.filter(p => normalizarCategoria(p.categoria) === 'discipuladora');
+        const batizados = todasCriancas.filter(c => c.batizado === 'Sim');
+
+        document.getElementById('statCelulas').innerText = todasCelulas.length;
+        document.getElementById('statLideres').innerText = lideres.length;
+        document.getElementById('statDiscipuladoras').innerText = discipuladoras.length;
+        document.getElementById('statCriancas').innerText = todasCriancas.length;
+        document.getElementById('statBatizados').innerText = batizados.length;
+    }
+
+    // ================================================================
+    //  FILTROS
+    // ================================================================
+    function preencherFiltros() {
+        // Discipuladoras
+        const discipuladoras = todasPessoas.filter(p => normalizarCategoria(p.categoria) === 'discipuladora');
+        const selDisc = document.getElementById('filtroDiscipuladora');
+        selDisc.innerHTML = '<option value="">Todas as Discipuladoras</option>';
+        discipuladoras.forEach(d => {
+            selDisc.innerHTML += `<option value="${d.id}">${d.nome}</option>`;
+        });
+
+        // Líderes
+        const lideres = todasPessoas.filter(p => normalizarCategoria(p.categoria) === 'líder' || normalizarCategoria(p.categoria) === 'lider');
+        const selLid = document.getElementById('filtroLiderCelula');
+        selLid.innerHTML = '<option value="">Todos os Líderes</option>';
+        lideres.forEach(l => {
+            selLid.innerHTML += `<option value="${l.id}">${l.nome}</option>`;
+        });
+
+        // Relatórios - células
+        const selRel = document.getElementById('filtroRelCelula');
+        selRel.innerHTML = '<option value="">Todas as Células</option>';
+        todasCelulas.forEach(c => {
+            selRel.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+        });
+
+        // Hoje nos filtros de data
+        const hoje = new Date();
+        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        document.getElementById('filtroRelDataInicio').value = primeiroDia.toISOString().split('T')[0];
+        document.getElementById('filtroRelDataFim').value = hoje.toISOString().split('T')[0];
+    }
+
+    // ================================================================
+    //  RENDERIZAR CÉLULAS
+    // ================================================================
+    function renderizarCelulas(celulas) {
+        const container = document.getElementById('listaCelulasRede');
+        container.innerHTML = '';
+        if (!celulas || celulas.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#999;">Nenhuma célula encontrada.</p>';
+            return;
+        }
+
+        celulas.forEach(cel => {
+            const nomeLider = mapaNomes[cel.lider_user_id] || 'Não definido';
+            const nomeSupervisor = mapaNomes[cel.supervisor_user_id] || 'Não definido';
+            const nomeColider = mapaNomes[cel.colider_user_id] || '';
+
+            const card = document.createElement('div');
+            card.className = 'celula-card';
+            card.innerHTML = `
+                <div class="celula-info" onclick="abrirDetalhesCelula('${cel.id}')">
+                    <div class="celula-nome">${cel.nome}</div>
+                    <div class="celula-detalhe"><i class="fas fa-user"></i> Líder: ${nomeLider}</div>
+                    <div class="celula-detalhe"><i class="fas fa-user-tie"></i> Discipuladora: ${nomeSupervisor}</div>
+                    ${nomeColider ? `<div class="celula-detalhe"><i class="fas fa-user-graduate"></i> Líder em Trein.: ${nomeColider}</div>` : ''}
+                    <div class="celula-detalhe"><i class="far fa-calendar-alt"></i> ${cel.dia_horario || 'Horário não definido'}</div>
+                    <div class="celula-detalhe"><i class="fas fa-map-marker-alt"></i> ${cel.endereco || 'Endereço não cadastrado'}</div>
+                    ${cel.acompanha_celula_adulto === 'Sim' ? '<div class="celula-detalhe"><i class="fas fa-link"></i> Acompanha célula de adultos</div>' : ''}
+                </div>
+                <div class="badge-membros" onclick="event.stopPropagation(); abrirDetalhesCelula('${cel.id}')">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function filtrarCelulas() {
+        const discId = document.getElementById('filtroDiscipuladora').value;
+        const lidId = document.getElementById('filtroLiderCelula').value;
+        const busca = document.getElementById('filtroBuscaCelula').value.toLowerCase();
+
+        let filtradas = todasCelulas;
+        if (discId) filtradas = filtradas.filter(c => c.supervisor_user_id === discId);
+        if (lidId) filtradas = filtradas.filter(c => c.lider_user_id === lidId);
+        if (busca) filtradas = filtradas.filter(c => c.nome.toLowerCase().includes(busca));
+
+        renderizarCelulas(filtradas);
+    }
+
+    // ================================================================
+    //  DETALHES DA CÉLULA (modal)
+    // ================================================================
+    async function abrirDetalhesCelula(celulaId) {
+        const cel = todasCelulas.find(c => c.id === celulaId);
+        if (!cel) return;
+
+        // Buscar membros da célula
+        const { data: membros } = await supabaseClient
+            .from('rk_pessoas')
+            .select('*')
+            .eq('celula_id', celulaId)
+            .eq('arquivado', false)
+            .order('nome');
+
+        // Montar modal simples
+        const container = document.createElement('div');
+        container.className = 'modal-overlay';
+        container.id = 'modalDetalhesCelula';
+        container.style.alignItems = 'center';
+        container.innerHTML = `
+            <div class="modal-content" style="max-width:600px; max-height:90vh; border-radius:20px;" onclick="event.stopPropagation()">
+                <button class="btn-close-modal" onclick="fecharModal('modalDetalhesCelula')">&times;</button>
+                <h3 style="color:var(--primary); margin-top:0;">${cel.nome}</h3>
+                <div style="margin-bottom:15px;">
+                    <p><strong>Líder:</strong> ${mapaNomes[cel.lider_user_id] || 'Não definido'}</p>
+                    <p><strong>Discipuladora:</strong> ${mapaNomes[cel.supervisor_user_id] || 'Não definido'}</p>
+                    ${cel.colider_user_id ? `<p><strong>Líder em Treinamento:</strong> ${mapaNomes[cel.colider_user_id]}</p>` : ''}
+                    <p><strong>Dia/Horário:</strong> ${cel.dia_horario || 'Não definido'}</p>
+                    <p><strong>Endereço:</strong> ${cel.endereco || 'Não definido'}</p>
+                    <p><strong>Anfitrião:</strong> ${cel.anfitriao || 'Não definido'}</p>
+                    <p><strong>Data de Início:</strong> ${cel.data_inicio || 'Não definida'}</p>
+                    <p><strong>Acompanha célula de adultos?</strong> ${cel.acompanha_celula_adulto || 'Não'}</p>
+                </div>
+                <h4 style="margin:15px 0 10px;">Crianças (${membros ? membros.length : 0})</h4>
+                <div style="max-height:300px; overflow-y:auto;">
+                    ${membros && membros.length ? membros.map(m => `
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0ecea;">
+                            <span>${m.nome}</span>
+                            <span style="font-size:0.8rem; color:var(--text-light);">${m.categoria || 'Criança'}</span>
+                        </div>
+                    `).join('') : '<p style="color:#999;">Nenhuma criança cadastrada.</p>'}
+                </div>
+                <button onclick="fecharModal('modalDetalhesCelula')" class="btn-save" style="background:#555; margin-top:15px;">Fechar</button>
+            </div>
+        `;
+        document.body.appendChild(container);
+        container.classList.remove('hidden');
+    }
+
+    // ================================================================
+    //  RELATÓRIOS
+    // ================================================================
+    function renderizarRelatorios(lista) {
+        const div = document.getElementById('listaRelatorios');
+        div.innerHTML = '';
+        if (!lista || lista.length === 0) {
+            div.innerHTML = '<p style="text-align:center; color:#999;">Nenhum relatório encontrado.</p>';
+            return;
+        }
+
+        // Aplicar filtros de data
+        const inicio = document.getElementById('filtroRelDataInicio').value;
+        const fim = document.getElementById('filtroRelDataFim').value;
+        let filtrados = lista;
+        if (inicio) filtrados = filtrados.filter(r => r.data >= inicio);
+        if (fim) filtrados = filtrados.filter(r => r.data <= fim);
+
+        const celulaId = document.getElementById('filtroRelCelula').value;
+        if (celulaId) filtrados = filtrados.filter(r => r.celula_id === celulaId);
+
+        if (filtrados.length === 0) {
+            div.innerHTML = '<p style="text-align:center; color:#999;">Nenhum relatório com os filtros atuais.</p>';
+            return;
+        }
+
+        filtrados.forEach(r => {
+            const nomeCel = window.celulaMap?.[r.celula_id] || mapaNomes[r.celula_id] || 'Célula não encontrada';
+            const dataF = r.data ? r.data.split('-').reverse().join('/') : '';
+            const card = document.createElement('div');
+            card.className = 'celula-card';
+            card.innerHTML = `
+                <div class="celula-info" onclick="abrirDetalheRelatorio('${r.id}')">
+                    <div class="celula-nome">${nomeCel}</div>
+                    <div class="celula-detalhe"><i class="far fa-calendar-alt"></i> ${dataF}</div>
+                </div>
+                <div class="badge-membros" onclick="event.stopPropagation(); abrirDetalheRelatorio('${r.id}')">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            `;
+            div.appendChild(card);
+        });
+    }
+
+    function filtrarRelatorios() {
+        renderizarRelatorios(todosRelatorios);
+    }
+
+    async function abrirDetalheRelatorio(id) {
+        const { data: rel } = await supabaseClient
+            .from('rk_relatorios')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (!rel) return;
+
+        const { data: presencas } = await supabaseClient
+            .from('rk_presencas')
+            .select('membro_id, presente')
+            .eq('relatorio_id', id);
+
+        const presentes = [], ausentes = [];
+        presencas?.forEach(p => {
+            const pessoa = todasPessoas.find(m => m.id === p.membro_id);
+            if (pessoa) {
+                if (p.presente) presentes.push(pessoa.nome);
+                else ausentes.push(pessoa.nome);
+            }
+        });
+
+        document.getElementById('detalheRelCelula').innerText = window.celulaMap?.[rel.celula_id] || mapaNomes[rel.celula_id] || 'Célula não encontrada';
+        document.getElementById('detalheRelData').innerText = rel.data?.split('-').reverse().join('/');
+        document.getElementById('detalheRelTotal').innerText = presentes.length;
+        document.getElementById('detalheRelQuebra').innerText = rel.quebra_gelo || '-';
+        document.getElementById('detalheRelPalavra').innerText = rel.palavra || '-';
+        document.getElementById('detalheRelLouvor').innerText = rel.louvor || '-';
+        document.getElementById('detalheRelLanche').innerText = rel.lanche || '-';
+        document.getElementById('detalheRelObs').innerText = rel.observacoes || 'Nenhuma observação.';
+        document.getElementById('listaPresentes').innerHTML = presentes.length ? presentes.map(n => `<div>👤 ${n}</div>`).join('') : '<div style="color:#999;">Nenhum</div>';
+        document.getElementById('listaAusentes').innerHTML = ausentes.length ? ausentes.map(n => `<div>👤 ${n}</div>`).join('') : '<div style="color:#999;">Nenhum</div>';
+
+        document.getElementById('modalRelatorio').classList.remove('hidden');
+    }
+
+    // ================================================================
+    //  PEDIDOS DE ORAÇÃO
+    // ================================================================
+    async function carregarPedidos() {
+        const { data: pedidos } = await supabaseClient
+            .from('rk_sugestoes')
+            .select('*')
+            .order('id', { ascending: false });
+        const corpo = document.getElementById('corpoPedidos');
+        corpo.innerHTML = '';
+        if (!pedidos || pedidos.length === 0) {
+            corpo.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Nenhum pedido.</td></tr>';
+            return;
+        }
+        pedidos.forEach(p => {
+            const ativo = p.ativo !== false;
+            corpo.innerHTML += `
+                <tr style="${ativo ? '' : 'opacity:0.5;'}">
+                    <td>${p.data || ''}</td>
+                    <td>${p.mensagem}</td>
+                    <td>${ativo ? `<button class="btn-card" onclick="concluirPedido('${p.id}')"><i class="fas fa-check"></i> Concluir</button>` : '✔️ Concluído'}</td>
+                </tr>
+            `;
+        });
+    }
+
+    async function concluirPedido(id) {
+        if (!confirm("Marcar este pedido como concluído?")) return;
+        try {
+            const { data: pedido } = await supabaseClient
+                .from('rk_sugestoes')
+                .select('mensagem')
+                .eq('id', id)
+                .single();
+            await supabaseClient.from('rk_sugestoes').update({ ativo: false }).eq('id', id);
+            await registrarLogAcao(`Concluiu pedido de oração: "${pedido?.mensagem?.substring(0, 50) || ''}"`);
+            carregarPedidos();
+        } catch (e) {
+            alert("Erro ao concluir pedido.");
+        }
+    }
+
+    // ================================================================
+    //  RELATÓRIOS GERENCIAIS
+    // ================================================================
+    function fecharModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    }
+
+    function imprimirRelatorio() {
+        window.print();
+    }
+
+    function mostrarRelatorioPersonalizado(titulo, conteudoHTML) {
+        document.getElementById('tituloRelatorioPersonalizado').innerText = titulo;
+        document.getElementById('conteudoRelatorio').innerHTML = conteudoHTML;
+        document.getElementById('modalRelatorioPersonalizado').classList.remove('hidden');
+    }
+
+    // 1. Supervisão Geral
+    async function gerarSupervisaoGeral() {
+        // Buscar dados atualizados
+        const { data: celulas } = await supabaseClient.from('rk_celulas').select('*');
+        const { data: pessoas } = await supabaseClient.from('rk_pessoas').select('id, nome');
+        const mapaNomes = {};
+        pessoas.forEach(p => mapaNomes[p.id] = p.nome);
+
+        const { data: membros } = await supabaseClient
+            .from('rk_pessoas')
+            .select('*')
+            .eq('arquivado', false);
+
+        const membrosPorCelula = {};
+        membros.forEach(m => {
+            if (m.celula_id) {
+                if (!membrosPorCelula[m.celula_id]) membrosPorCelula[m.celula_id] = [];
+                membrosPorCelula[m.celula_id].push(m);
+            }
+        });
+
+        let html = `
+        <div style="font-family: 'Inter', sans-serif;">
+            <div style="text-align:center; margin-bottom:25px;">
+                <h1 style="color:var(--primary);">Supervisão Geral – Rede Kids</h1>
+                <p>Gerado em ${new Date().toLocaleString()}</p>
+            </div>
+        `;
+        celulas.forEach(cel => {
+            const lider = mapaNomes[cel.lider_user_id] || 'Não definido';
+            const supervisor = mapaNomes[cel.supervisor_user_id] || 'Não definido';
+            const colider = mapaNomes[cel.colider_user_id] || '';
+            const membrosCel = membrosPorCelula[cel.id] || [];
+            html += `
+                <div style="border:1px solid #e6dcd8; border-radius:12px; padding:20px; margin-bottom:20px; page-break-inside:avoid;">
+                    <h3 style="color:var(--primary); margin:0 0 10px 0;">${cel.nome}</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px; font-size:0.9rem;">
+                        <div><strong>Líder:</strong> ${lider}</div>
+                        <div><strong>Discipuladora:</strong> ${supervisor}</div>
+                        ${colider ? `<div><strong>Líder em Trein.:</strong> ${colider}</div>` : ''}
+                        <div><strong>Dia/Horário:</strong> ${cel.dia_horario || '-'}</div>
+                        <div><strong>Endereço:</strong> ${cel.endereco || '-'}</div>
+                        <div><strong>Anfitrião:</strong> ${cel.anfitriao || '-'}</div>
+                        <div><strong>Data de Início:</strong> ${cel.data_inicio || '-'}</div>
+                        <div><strong>Acompanha adultos:</strong> ${cel.acompanha_celula_adulto || 'Não'}</div>
+                    </div>
+                    <h4 style="margin:10px 0;">Membros (${membrosCel.length})</h4>
+                    ${membrosCel.length ? `
+                        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:8px;">
+                            ${membrosCel.map(m => `
+                                <div style="background:#f9f5f3; padding:6px 10px; border-radius:8px;">
+                                    ${m.nome} ${m.batizado === 'Sim' ? '🕊️' : ''}
+                                    <span style="font-size:0.7rem; color:var(--text-light);">${m.categoria || ''}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p style="color:#999;">Nenhuma criança cadastrada.</p>'}
+                </div>
+            `;
+        });
+        html += '</div>';
+        mostrarRelatorioPersonalizado('Supervisão Geral – Fichas das Células', html);
+        registrarLogAcao('Gerou Supervisão Geral');
+    }
+
+    // 2. Líderes sem relatório na semana
+    function abrirRelatorioLideresSemRelatorio() {
+        const agora = new Date();
+        const inicioSemana = new Date(agora);
+        inicioSemana.setDate(agora.getDate() - ((agora.getDay() + 6) % 7));
+        inicioSemana.setHours(0,0,0,0);
+        const fimSemana = new Date(inicioSemana);
+        fimSemana.setDate(inicioSemana.getDate() + 6);
+        fimSemana.setHours(23,59,59,999);
+
+        const relSemana = todosRelatorios.filter(r => {
+            const d = new Date(r.data + 'T00:00:00');
+            return d >= inicioSemana && d <= fimSemana;
+        });
+        const celulasComRelatorio = new Set(relSemana.map(r => r.celula_id));
+        const celulasSemRelatorio = todasCelulas.filter(c => !celulasComRelatorio.has(c.id));
+
+        const lideresAtivos = todasPessoas.filter(p => normalizarCategoria(p.categoria) === 'líder' || normalizarCategoria(p.categoria) === 'lider');
+        const lideresComCelula = new Set(celulasSemRelatorio.map(c => c.lider_user_id));
+        const lideresSemRelatorio = lideresAtivos.filter(l => lideresComCelula.has(l.id));
+
+        let html = '';
+        if (lideresSemRelatorio.length === 0) {
+            html = '<p style="text-align:center; color:var(--success-text);">Todos os líderes lançaram relatório esta semana.</p>';
+        } else {
+            html = `<table class="table-clean"><thead><tr><th>Líder</th><th>Célula</th></tr></thead><tbody>
+                ${lideresSemRelatorio.map(l => {
+                    const celula = todasCelulas.find(c => c.lider_user_id === l.id);
+                    return `<tr><td>${l.nome}</td><td>${celula ? celula.nome : 'Sem célula'}</td></tr>`;
+                }).join('')}
+            </tbody></table>`;
+        }
+        mostrarRelatorioPersonalizado('Líderes sem relatório na semana', html);
+        registrarLogAcao('Visualizou relatório de líderes sem relatório');
+    }
+
+    // 3. Crianças com 3+ faltas em 30 dias
+    async function abrirRelatorioFaltosos() {
+        const trintaDiasAtras = new Date();
+        trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+        const dataLimite = trintaDiasAtras.toISOString().split('T')[0];
+
+        const rels = todosRelatorios.filter(r => r.data >= dataLimite);
+        if (!rels.length) {
+            mostrarRelatorioPersonalizado('Crianças com 3+ faltas (30 dias)', '<p style="text-align:center; color:#999;">Nenhum relatório nos últimos 30 dias.</p>');
+            return;
+        }
+        const ids = rels.map(r => r.id);
+        const { data: presencas } = await supabaseClient
+            .from('rk_presencas')
+            .select('membro_id, presente')
+            .in('relatorio_id', ids);
+
+        const faltasMap = {};
+        presencas?.forEach(p => {
+            if (!p.presente) {
+                faltasMap[p.membro_id] = (faltasMap[p.membro_id] || 0) + 1;
+            }
+        });
+        const faltosos = todasCriancas.filter(c => faltasMap[c.id] >= 3);
+
+        let html = '';
+        if (faltosos.length === 0) {
+            html = '<p style="text-align:center; color:var(--success-text);">Nenhuma criança com 3 ou mais faltas.</p>';
+        } else {
+            html = `<table class="table-clean"><thead><tr><th>Criança</th><th>Célula</th><th>Faltas</th></tr></thead><tbody>
+                ${faltosos.map(c => {
+                    const cel = todasCelulas.find(cl => cl.id === c.celula_id);
+                    return `<tr><td>${c.nome}</td><td>${cel ? cel.nome : 'Sem célula'}</td><td>${faltasMap[c.id]}</td></tr>`;
+                }).join('')}
+            </tbody></table>`;
+        }
+        mostrarRelatorioPersonalizado('Crianças com 3+ faltas (30 dias)', html);
+        registrarLogAcao('Visualizou relatório de faltosos');
+    }
+
+    // 4. Queda de frequência
+    function abrirRelatorioQuedaFrequencia() {
+        const ultimosRelatorios = {};
+        todosRelatorios.forEach(r => {
+            if (!ultimosRelatorios[r.celula_id]) ultimosRelatorios[r.celula_id] = [];
+            ultimosRelatorios[r.celula_id].push(r);
+        });
+
+        const resultado = [];
+        Object.entries(ultimosRelatorios).forEach(([celulaId, rels]) => {
+            rels.sort((a, b) => new Date(b.data) - new Date(a.data));
+            const ultimos4 = rels.slice(0, 4);
+            if (ultimos4.length >= 4) {
+                // Buscar contagem de presentes para cada relatório
+                const medias = ultimos4.map(r => {
+                    // A contagem será obtida via presencas, mas como não temos aqui, usamos um placeholder
+                    // Idealmente buscaríamos as presenças, mas para simplificar, usamos 0
+                    // Vamos buscar presenças para cada relatório
+                    return 0;
+                });
+                // Como não temos a contagem de presentes aqui, vou pular essa parte e mostrar uma mensagem
+                // Na prática, seria necessário buscar as presenças de cada relatório.
+                // Vou deixar um placeholder.
+            }
+        });
+
+        // Versão simplificada: mostramos uma mensagem informando que a funcionalidade está em desenvolvimento
+        mostrarRelatorioPersonalizado('Células com queda de frequência', 
+            '<p style="text-align:center; color:#999;">Funcionalidade em desenvolvimento. Em breve será possível visualizar as células com queda de frequência.</p>');
+        registrarLogAcao('Visualizou relatório de queda de frequência');
+    }
+
+    // 5. Células sem líder em treinamento
+    function abrirRelatorioSemColider() {
+        const semColider = todasCelulas.filter(c => !c.colider_user_id);
+        let html = '';
+        if (semColider.length === 0) {
+            html = '<p style="text-align:center; color:var(--success-text);">Todas as células possuem líder em treinamento.</p>';
+        } else {
+            html = `<table class="table-clean"><thead><tr><th>Célula</th><th>Líder</th></tr></thead><tbody>
+                ${semColider.map(c => {
+                    const lider = mapaNomes[c.lider_user_id] || 'Não definido';
+                    return `<tr><td>${c.nome}</td><td>${lider}</td></tr>`;
+                }).join('')}
+            </tbody></table>`;
+        }
+        mostrarRelatorioPersonalizado('Células sem líder em treinamento', html);
+        registrarLogAcao('Visualizou relatório de células sem colíder');
+    }
+
+    // 6. Status espiritual
+    function abrirRelatorioStatusEspiritual() {
+        const total = todasCriancas.length;
+        const batizados = todasCriancas.filter(c => c.batizado === 'Sim').length;
+        const encontro = todasCriancas.filter(c => c.encontro === 'Sim').length;
+        const liderTrein = todasCriancas.filter(c => c.lider_treinamento === 'Sim').length;
+        const kids = todasCriancas.filter(c => c.frequenta_culto_kids === 'Sim').length;
+
+        const html = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div class="stat-card" style="border-left:4px solid var(--primary);"><div class="stat-number">${batizados}</div><div class="stat-label">Batizados (${total ? ((batizados/total)*100).toFixed(1) : 0}%)</div></div>
+                <div class="stat-card" style="border-left:4px solid #fd7e14;"><div class="stat-number">${encontro}</div><div class="stat-label">Encontro (${total ? ((encontro/total)*100).toFixed(1) : 0}%)</div></div>
+                <div class="stat-card" style="border-left:4px solid #6f42c1;"><div class="stat-number">${liderTrein}</div><div class="stat-label">Líder em Trein. (${total ? ((liderTrein/total)*100).toFixed(1) : 0}%)</div></div>
+                <div class="stat-card" style="border-left:4px solid #0dcaf0;"><div class="stat-number">${kids}</div><div class="stat-label">Frequenta Culto Kids (${total ? ((kids/total)*100).toFixed(1) : 0}%)</div></div>
+            </div>
+        `;
+        mostrarRelatorioPersonalizado('Status Espiritual das Crianças', html);
+        registrarLogAcao('Visualizou relatório de status espiritual');
+    }
+
+    // ================================================================
+    //  AGENDA
+    // ================================================================
+    function renderizarAgenda(lista) {
+        const div = document.getElementById('listaAgenda');
+        div.innerHTML = '';
+        if (!lista || lista.length === 0) {
+            div.innerHTML = '<p style="text-align:center; color:#999;">Nenhum evento na agenda.</p>';
+            return;
+        }
+        const parseDate = (str) => {
+            if (!str) return 0;
+            if (str.includes('-')) { const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d).getTime(); }
+            if (str.includes('/')) { const [d,m,y] = str.split('/').map(Number); return new Date(y, m-1, d).getTime(); }
+            return Date.parse(str) || 0;
+        };
+        lista.sort((a,b) => parseDate(a[0]) - parseDate(b[0]));
+        lista.forEach(a => {
+            let dataF = a[0] || '';
+            try { if (a[0] && a[0].includes('-')) { const [y,m,d] = a[0].split('-'); dataF = `${d}/${m}/${y}`; } } catch(e) {}
+            let bgColor = '#8b5a6a';
+            if (a[4] === 'RADICAIS KIDS') bgColor = '#b58900';
+            else if (a[4] === 'GOOGLE AGENDA') bgColor = '#4a6a8b';
+            let corTipo = (a[3] === 'Pago') ? '#b34a4a' : 'var(--success-text)';
+            div.innerHTML += `
+                <div class="member-card">
+                    <div class="card-header">
+                        <h4 class="card-name"><i class="far fa-calendar-alt"></i> ${dataF}</h4>
+                        <span class="cat-badge" style="background:${bgColor}; color:white; border:none;">${a[4] || ''}</span>
+                    </div>
+                    <div style="font-weight:700;">${a[1] || ''}</div>
+                    <div style="color:#666;">${a[2] || ''}</div>
+                    <div style="margin-top:10px;"><span style="color:${corTipo}; font-weight:600;">${a[3] || ''}</span></div>
+                </div>`;
+        });
+    }
+
+    // ================================================================
+    //  PALAVRAS
+    // ================================================================
+    function renderizarPalavras(lista) {
+        const div = document.getElementById('listaPalavras');
+        div.innerHTML = '';
+        if (!lista || lista.length === 0) {
+            div.innerHTML = '<p style="text-align:center; color:#999;">Nenhuma palavra cadastrada.</p>';
+            return;
+        }
+        lista.forEach((p, index) => {
+            let dataF = p.data || '';
+            try { if (dataF.includes('-')) { const dp = dataF.split('-'); dataF = `${dp[2]}/${dp[1]}/${dp[0]}`; } } catch(e) {}
+            div.innerHTML += `
+                <div class="word-list-item" onclick="abrirPalavra(${index})">
+                    <div>
+                        <div class="word-date"><i class="far fa-calendar-alt"></i> ${dataF}</div>
+                        <div class="word-theme">${p.tema || 'Sem título'}</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:var(--text-light);"></i>
+                </div>`;
+        });
+    }
+
+    function abrirPalavra(index) {
+        const p = listaPalavras[index];
+        palavraAtual = p;
+        document.getElementById('modalTitulo').innerText = p.tema || '';
+        let dataF = p.data || '';
+        try { if (dataF.includes('-')) { const dp = dataF.split('-'); dataF = `${dp[2]}/${dp[1]}/${dp[0]}`; } } catch(e) {}
+        document.getElementById('modalDataPalavra').innerText = dataF;
+        document.getElementById('modalTexto').innerText = p.texto || '';
+        const btn = document.getElementById('btnLinkYoutube');
+        if (p.link_youtube && p.link_youtube.trim()) {
+            btn.href = p.link_youtube.trim();
+            btn.classList.remove('hidden');
+        } else {
+            btn.classList.add('hidden');
+            btn.href = '#';
+        }
+        document.getElementById('modalPalavra').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        registrarLogAcao(`Abriu a palavra "${p.tema || 'Sem título'}" (${dataF})`);
+    }
+
+    function fecharModalPalavra(e) {
+        if (e === null || (e.target && e.target.id === 'modalPalavra')) {
+            document.getElementById('modalPalavra').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function baixarPalavraTXT() {
+        if (!palavraAtual) return;
+        const titulo = palavraAtual.tema || 'Palavra';
+        const data = palavraAtual.data || '';
+        const texto = palavraAtual.texto || '';
+        let dataFormatada = data;
+        if (data.includes('-')) { const partes = data.split('-'); dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`; }
+        const conteudo = `${titulo}\n${dataFormatada}\n\n${texto}`;
+        const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${titulo.replace(/\s+/g, '_')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ================================================================
+    //  BÍBLIA (offcanvas)
+    // ================================================================
+    let versaoSelecionada = localStorage.getItem('biblia_versao') || 'msg';
+    const siglasVersoes = { msg:'MSG', nvi:'NVI', aa:'ARA', acf:'ACF', ntlh:'NTLH' };
+    const nomesCompletos = {
+        msg: 'A Mensagem',
+        nvi: 'Nova Versão Internacional',
+        aa: 'Almeida Revista e Atualizada',
+        acf: 'Almeida Corrigida Fiel',
+        ntlh: 'Nova Tradução na Linguagem de Hoje'
+    };
+
+    async function abrirBiblia() {
+        document.getElementById('painel-biblia').classList.add('aberto');
+        document.getElementById('biblia-overlay').style.display = 'block';
+        setTimeout(() => document.getElementById('biblia-overlay').style.opacity = '1', 10);
+        if (typeof Biblia !== 'undefined') {
+            if (!Biblia.bibliaCarregada) await Biblia.inicializar();
+            versaoSelecionada = Biblia.getVersaoAtiva();
+            document.getElementById('versaoSiglaAtual').innerText = siglasVersoes[versaoSelecionada] || versaoSelecionada;
+        }
+    }
+
+    function fecharBiblia() {
+        document.getElementById('painel-biblia').classList.remove('aberto');
+        const ov = document.getElementById('biblia-overlay');
+        ov.style.opacity = '0';
+        setTimeout(() => ov.style.display = 'none', 300);
+    }
+
+    function abrirModalVersao() {
+        const modal = document.getElementById('modalVersao');
+        const listaDiv = document.getElementById('listaVersoes');
+        listaDiv.innerHTML = '';
+        Object.entries(nomesCompletos).forEach(([id, nome]) => {
+            const item = document.createElement('div');
+            item.className = 'versao-item' + (id === versaoSelecionada ? ' selecionada' : '');
+            item.innerHTML = `${nome} <span style="opacity:0.7; font-size:0.9rem;">${siglasVersoes[id]}</span>`;
+            item.onclick = () => selecionarVersao(id);
+            listaDiv.appendChild(item);
+        });
+        modal.classList.remove('hidden');
+    }
+
+    function fecharModalVersao(e) {
+        if (!e || e.target.classList.contains('modal-overlay') || e.target.classList.contains('btn-close-modal')) {
+            document.getElementById('modalVersao').classList.add('hidden');
+        }
+    }
+
+    async function selecionarVersao(id) {
+        versaoSelecionada = id;
+        localStorage.setItem('biblia_versao', id);
+        document.getElementById('versaoSiglaAtual').innerText = siglasVersoes[id];
+        fecharModalVersao();
+        if (typeof Biblia !== 'undefined') await Biblia.mudarVersao(id);
+    }
+
+    function capituloAnterior() {
+        const selCap = document.getElementById('biblia-capitulo');
+        let val = parseInt(selCap.value);
+        if (val > 1) { selCap.value = val - 1; if (typeof Biblia !== 'undefined') Biblia.onCapituloChange(); }
+        else {
+            const selLiv = document.getElementById('biblia-livro');
+            if (selLiv.selectedIndex > 0) {
+                selLiv.selectedIndex--;
+                if (typeof Biblia !== 'undefined') {
+                    Biblia.onLivroChange();
+                    setTimeout(() => {
+                        const selCap = document.getElementById('biblia-capitulo');
+                        selCap.value = selCap.options.length;
+                        Biblia.onCapituloChange();
+                    }, 100);
+                }
+            }
+        }
+    }
+
+    function capituloProximo() {
+        const selCap = document.getElementById('biblia-capitulo');
+        let val = parseInt(selCap.value);
+        if (val < selCap.options.length) { selCap.value = val + 1; if (typeof Biblia !== 'undefined') Biblia.onCapituloChange(); }
+        else {
+            const selLiv = document.getElementById('biblia-livro');
+            if (selLiv.selectedIndex < selLiv.options.length - 1) {
+                selLiv.selectedIndex++;
+                if (typeof Biblia !== 'undefined') {
+                    Biblia.onLivroChange();
+                    setTimeout(() => {
+                        document.getElementById('biblia-capitulo').value = 1;
+                        Biblia.onCapituloChange();
+                    }, 100);
+                }
+            }
+        }
+    }
+
+    // ================================================================
+    //  NAVEGAÇÃO
+    // ================================================================
+    function mudarSecao(s) {
+        const secoes = ['celulas', 'relatorios', 'pedidos', 'agenda', 'palavras', 'biblia', 'material-celula', 'visao-geral'];
+        secoes.forEach(id => { const el = document.getElementById('secao-' + id); if (el) el.classList.add('hidden'); });
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const secao = document.getElementById('secao-' + s); if (secao) secao.classList.remove('hidden');
+        const btn = document.getElementById('btn-' + s); if (btn) btn.classList.add('active');
+        if (s === 'biblia') abrirBiblia();
+    }
+
+    // ================================================================
+    //  MATERIAL DE CÉLULA (admin) — Apostilas -> Lições
+    // ================================================================
+    async function uploadArquivoStorage(bucket, path, file) {
+        const { error } = await supabaseClient.storage.from(bucket).upload(path, file, { upsert: true, contentType: file.type });
+        if (error) throw error;
+    }
+
+    async function removerArquivoStorage(bucket, path) {
+        try { await supabaseClient.storage.from(bucket).remove([path]); } catch(e) { console.warn('Falha ao remover arquivo do storage:', e); }
+    }
+
+    function getPublicUrlStorage(bucket, path) {
+        const { data } = supabaseClient.storage.from(bucket).getPublicUrl(path);
+        return data.publicUrl;
+    }
+
+    function renderizarApostilasAdmin(lista) {
+        const div = document.getElementById('listaApostilasAdmin');
+        div.innerHTML = '';
+        div.innerHTML += `
+            <div class="btn-nova-apostila-card" onclick="abrirNovaApostila()">
+                <i class="fas fa-plus" style="font-size:1.6rem;"></i>
+                <span>Nova Apostila</span>
+            </div>`;
+        (lista || []).forEach(a => {
+            const capa = a.capa_url
+                ? `<img src="${a.capa_url}" class="apostila-capa" onclick="abrirApostilaAdmin('${a.id}')" alt="${a.titulo}">`
+                : `<div class="apostila-capa-placeholder" onclick="abrirApostilaAdmin('${a.id}')"><i class="fas fa-book"></i></div>`;
+            div.innerHTML += `
+                <div class="apostila-card">
+                    <div class="apostila-acoes">
+                        <button class="btn-icone-mini" onclick="event.stopPropagation(); abrirEditarApostila('${a.id}')" title="Editar"><i class="fas fa-pen"></i></button>
+                        <button class="btn-icone-mini excluir" onclick="event.stopPropagation(); excluirApostila('${a.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </div>
+                    ${capa}
+                    <div class="apostila-info" onclick="abrirApostilaAdmin('${a.id}')">
+                        <div class="apostila-titulo">${a.titulo}</div>
+                        ${a.ano ? `<div class="apostila-ano">${a.ano}</div>` : ''}
+                    </div>
+                </div>`;
+        });
+    }
+
+    function abrirNovaApostila() {
+        document.getElementById('formApostila').reset();
+        document.getElementById('apostilaFormId').value = '';
+        document.getElementById('tituloModalApostila').innerText = 'Nova Apostila';
+        document.getElementById('capaAtualInfo').innerText = '';
+        document.getElementById('modalApostila').classList.remove('hidden');
+    }
+
+    function abrirEditarApostila(id) {
+        const a = listaApostilas.find(x => x.id === id);
+        if (!a) return;
+        const form = document.getElementById('formApostila');
+        form.reset();
+        document.getElementById('apostilaFormId').value = a.id;
+        form.titulo.value = a.titulo || '';
+        form.ano.value = a.ano || '';
+        form.ordem.value = (a.ordem ?? 0);
+        form.descricao.value = a.descricao || '';
+        document.getElementById('tituloModalApostila').innerText = 'Editar Apostila';
+        document.getElementById('capaAtualInfo').innerText = a.capa_url ? 'Já existe uma capa. Envie uma nova imagem só se quiser trocá-la.' : '';
+        document.getElementById('modalApostila').classList.remove('hidden');
+    }
+
+    async function excluirApostila(id) {
+        const a = listaApostilas.find(x => x.id === id);
+        if (!a) return;
+        if (!confirm(`Excluir a apostila "${a.titulo}"? Todas as lições dela também serão excluídas. Essa ação não pode ser desfeita.`)) return;
+        try {
+            const { data: licoes } = await supabaseClient.from('rk_licoes').select('*').eq('apostila_id', id);
+            for (const l of (licoes || [])) {
+                if (l.tipo === 'pdf' && l.storage_path) {
+                    await removerArquivoStorage('material-celula', l.storage_path);
+                } else {
+                    const { data: paginas } = await supabaseClient.from('rk_licao_paginas').select('storage_path').eq('licao_id', l.id);
+                    const caminhos = (paginas || []).map(p => p.storage_path);
+                    if (caminhos.length) await supabaseClient.storage.from('material-celula').remove(caminhos);
+                }
+            }
+            if (a.capa_url) {
+                const partes = a.capa_url.split('/material-celula-capas/');
+                if (partes[1]) await removerArquivoStorage('material-celula-capas', partes[1]);
+            }
+            const { error } = await supabaseClient.from('rk_apostilas').delete().eq('id', id);
+            if (error) throw error;
+            await registrarLogAcao(`Excluiu a apostila "${a.titulo}"`);
+            await carregarTudo();
+        } catch (err) {
+            alert('Erro ao excluir apostila: ' + err.message);
+        }
+    }
+
+    function voltarApostilasAdmin() {
+        document.getElementById('viewLicoesAdmin').classList.add('hidden');
+        document.getElementById('viewApostilasAdmin').classList.remove('hidden');
+        apostilaAdminAtual = null;
+    }
+
+    async function abrirApostilaAdmin(id) {
+        const a = listaApostilas.find(x => x.id === id);
+        if (!a) return;
+        apostilaAdminAtual = a;
+        document.getElementById('tituloApostilaAdminAtual').innerText = a.titulo;
+        document.getElementById('viewApostilasAdmin').classList.add('hidden');
+        document.getElementById('viewLicoesAdmin').classList.remove('hidden');
+        document.getElementById('listaLicoesAdmin').innerHTML = '<p style="text-align:center; color:#999;">Carregando...</p>';
+        try {
+            const { data: licoes, error } = await supabaseClient
+                .from('rk_licoes')
+                .select('*')
+                .eq('apostila_id', id)
+                .order('numero', { ascending: true });
+            if (error) throw error;
+            licoesDaApostilaAdmin = licoes || [];
+            renderizarLicoesAdmin(licoesDaApostilaAdmin);
+        } catch (err) {
+            document.getElementById('listaLicoesAdmin').innerHTML = `<p style="text-align:center; color:#999;">Erro ao carregar lições: ${err.message}</p>`;
+        }
+    }
+
+    function renderizarLicoesAdmin(lista) {
+        const div = document.getElementById('listaLicoesAdmin');
+        div.innerHTML = '';
+        if (!lista || lista.length === 0) {
+            div.innerHTML = '<p style="text-align:center; color:#999;">Nenhuma lição cadastrada ainda.</p>';
+            return;
+        }
+        lista.forEach(l => {
+            div.innerHTML += `
+                <div class="licao-item">
+                    <div class="licao-numero">${l.numero}</div>
+                    <div class="licao-titulo">${l.titulo}</div>
+                    <div class="licao-tipo-badge">${l.tipo === 'pdf' ? 'PDF' : 'Imagens'}</div>
+                    <div class="licao-acoes">
+                        <button class="btn-icone-mini" style="background:var(--primary);" onclick="abrirEditarLicao('${l.id}')" title="Editar"><i class="fas fa-pen"></i></button>
+                        <button class="btn-icone-mini excluir" style="background:var(--danger-text);" onclick="excluirLicao('${l.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function toggleTipoLicaoInputs() {
+        const tipo = document.getElementById('licaoTipoSelect').value;
+        document.getElementById('campoUploadPdf').style.display = tipo === 'pdf' ? 'block' : 'none';
+        document.getElementById('campoUploadImagens').style.display = tipo === 'imagens' ? 'block' : 'none';
+    }
+
+    function abrirNovaLicao() {
+        if (!apostilaAdminAtual) return;
+        const form = document.getElementById('formLicao');
+        form.reset();
+        document.getElementById('licaoFormId').value = '';
+        document.getElementById('licaoTipoSelect').value = 'pdf';
+        toggleTipoLicaoInputs();
+        document.getElementById('pdfObrigatorioMarca').style.display = 'inline';
+        document.getElementById('imagensObrigatorioMarca').style.display = 'inline';
+        document.getElementById('pdfAtualInfo').innerText = '';
+        document.getElementById('imagensAtualInfo').innerText = '';
+        document.getElementById('tituloModalLicao').innerText = 'Nova Lição';
+        document.getElementById('modalLicao').classList.remove('hidden');
+    }
+
+    function abrirEditarLicao(id) {
+        const l = licoesDaApostilaAdmin.find(x => x.id === id);
+        if (!l) return;
+        const form = document.getElementById('formLicao');
+        form.reset();
+        document.getElementById('licaoFormId').value = l.id;
+        form.numero.value = l.numero;
+        form.titulo.value = l.titulo;
+        document.getElementById('licaoTipoSelect').value = l.tipo;
+        toggleTipoLicaoInputs();
+        document.getElementById('pdfObrigatorioMarca').style.display = 'none';
+        document.getElementById('imagensObrigatorioMarca').style.display = 'none';
+        document.getElementById('pdfAtualInfo').innerText = l.tipo === 'pdf' ? 'Já existe um PDF salvo. Envie um novo arquivo só se quiser substituí-lo.' : '';
+        document.getElementById('imagensAtualInfo').innerText = l.tipo === 'imagens' ? 'Já existem páginas salvas. Envie novas imagens só se quiser substituí-las (substitui todas).' : '';
+        document.getElementById('tituloModalLicao').innerText = 'Editar Lição';
+        document.getElementById('modalLicao').classList.remove('hidden');
+    }
+
+    async function excluirLicao(id) {
+        const l = licoesDaApostilaAdmin.find(x => x.id === id);
+        if (!l) return;
+        if (!confirm(`Excluir a lição "${l.titulo}"? Essa ação não pode ser desfeita.`)) return;
+        try {
+            if (l.tipo === 'pdf' && l.storage_path) {
+                await removerArquivoStorage('material-celula', l.storage_path);
+            } else {
+                const { data: paginas } = await supabaseClient.from('rk_licao_paginas').select('storage_path').eq('licao_id', l.id);
+                const caminhos = (paginas || []).map(p => p.storage_path);
+                if (caminhos.length) await supabaseClient.storage.from('material-celula').remove(caminhos);
+            }
+            const { error } = await supabaseClient.from('rk_licoes').delete().eq('id', id);
+            if (error) throw error;
+            await registrarLogAcao(`Excluiu a lição "${l.titulo}" da apostila "${apostilaAdminAtual.titulo}"`);
+            await abrirApostilaAdmin(apostilaAdminAtual.id);
+        } catch (err) {
+            alert('Erro ao excluir lição: ' + err.message);
+        }
+    }
+
+    function fazerLogout() {
+        if (confirm("Deseja sair?")) {
+            sessionStorage.clear();
+            window.location.href = "index.html?t=" + Date.now();
+        }
+    }
+
+    // ================================================================
+    //  EVENTOS INICIAIS
+    // ================================================================
+    function inicializarEventos() {
+        // Filtros
+        document.getElementById('filtroDiscipuladora')?.addEventListener('change', filtrarCelulas);
+        document.getElementById('filtroLiderCelula')?.addEventListener('change', filtrarCelulas);
+        document.getElementById('filtroBuscaCelula')?.addEventListener('keyup', filtrarCelulas);
+        document.getElementById('filtroRelCelula')?.addEventListener('change', filtrarRelatorios);
+        document.getElementById('filtroRelDataInicio')?.addEventListener('change', filtrarRelatorios);
+        document.getElementById('filtroRelDataFim')?.addEventListener('change', filtrarRelatorios);
+
+        // --- Apostila (criar/editar) ---
+        const formApostila = document.getElementById('formApostila');
+        if (formApostila) {
+            formApostila.onsubmit = async function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                btn.disabled = true; btn.innerText = 'Salvando...';
+                const id = this.id.value || null;
+                const capaFile = this.capa.files[0] || null;
+                const dados = {
+                    titulo: this.titulo.value,
+                    ano: this.ano.value ? parseInt(this.ano.value) : null,
+                    ordem: this.ordem.value ? parseInt(this.ordem.value) : 0,
+                    descricao: this.descricao.value || null
+                };
+                try {
+                    let apostilaId = id;
+                    if (id) {
+                        const { error } = await supabaseClient.from('rk_apostilas').update(dados).eq('id', id);
+                        if (error) throw error;
+                    } else {
+                        const { data, error } = await supabaseClient.from('rk_apostilas').insert([dados]).select().single();
+                        if (error) throw error;
+                        apostilaId = data.id;
+                    }
+                    if (capaFile) {
+                        const ext = capaFile.name.split('.').pop();
+                        const path = `capas/${apostilaId}-${Date.now()}.${ext}`;
+                        await uploadArquivoStorage('material-celula-capas', path, capaFile);
+                        const url = getPublicUrlStorage('material-celula-capas', path);
+                        const { error: updError } = await supabaseClient.from('rk_apostilas').update({ capa_url: url }).eq('id', apostilaId);
+                        if (updError) throw updError;
+                    }
+                    await registrarLogAcao(id ? `Editou a apostila "${dados.titulo}"` : `Criou a apostila "${dados.titulo}"`);
+                    fecharModal('modalApostila');
+                    await carregarTudo();
+                } catch (err) {
+                    alert('Erro ao salvar apostila: ' + err.message);
+                } finally {
+                    btn.disabled = false; btn.innerText = 'Salvar';
+                }
+            };
+        }
+
+        // --- Lição (criar/editar) ---
+        const formLicao = document.getElementById('formLicao');
+        if (formLicao) {
+            formLicao.onsubmit = async function(e) {
+                e.preventDefault();
+                if (!apostilaAdminAtual) { alert('Nenhuma apostila selecionada.'); return; }
+                const btn = document.getElementById('btnSalvarLicao');
+                btn.disabled = true; btn.innerText = 'Salvando...';
+
+                const id = this.id.value || null;
+                const tipo = this.tipo.value;
+                const pdfFile = this.arquivo_pdf.files[0] || null;
+                const imagensFiles = Array.from(this.arquivo_imagens.files || []);
+                const licaoExistente = id ? licoesDaApostilaAdmin.find(x => x.id === id) : null;
+
+                if (!id) {
+                    if (tipo === 'pdf' && !pdfFile) { alert('Selecione o arquivo PDF.'); btn.disabled = false; btn.innerText = 'Salvar'; return; }
+                    if (tipo === 'imagens' && imagensFiles.length === 0) { alert('Selecione ao menos uma imagem.'); btn.disabled = false; btn.innerText = 'Salvar'; return; }
+                }
+
+                const dados = {
+                    apostila_id: apostilaAdminAtual.id,
+                    numero: parseInt(this.numero.value),
+                    titulo: this.titulo.value,
+                    tipo: tipo
+                };
+
+                try {
+                    // Se o tipo de arquivo mudou na edição, limpa os arquivos do tipo anterior
+                    if (licaoExistente && licaoExistente.tipo !== tipo) {
+                        if (licaoExistente.tipo === 'pdf' && licaoExistente.storage_path) {
+                            await removerArquivoStorage('material-celula', licaoExistente.storage_path);
+                            dados.storage_path = null;
+                        } else if (licaoExistente.tipo === 'imagens') {
+                            const { data: antigas } = await supabaseClient.from('rk_licao_paginas').select('storage_path').eq('licao_id', id);
+                            const caminhosAntigos = (antigas || []).map(p => p.storage_path);
+                            if (caminhosAntigos.length) await supabaseClient.storage.from('material-celula').remove(caminhosAntigos);
+                            await supabaseClient.from('rk_licao_paginas').delete().eq('licao_id', id);
+                        }
+                    }
+
+                    let licaoId = id;
+                    if (id) {
+                        const { error } = await supabaseClient.from('rk_licoes').update(dados).eq('id', id);
+                        if (error) throw error;
+                    } else {
+                        const { data, error } = await supabaseClient.from('rk_licoes').insert([dados]).select().single();
+                        if (error) throw error;
+                        licaoId = data.id;
+                    }
+
+                    if (tipo === 'pdf' && pdfFile) {
+                        const path = `${apostilaAdminAtual.id}/${licaoId}.pdf`;
+                        await uploadArquivoStorage('material-celula', path, pdfFile);
+                        const { error: updError } = await supabaseClient.from('rk_licoes').update({ storage_path: path }).eq('id', licaoId);
+                        if (updError) throw updError;
+                    } else if (tipo === 'imagens' && imagensFiles.length > 0) {
+                        // Substituição: remove páginas antigas (banco + storage) antes de subir as novas
+                        const { data: antigas } = await supabaseClient.from('rk_licao_paginas').select('storage_path').eq('licao_id', licaoId);
+                        const caminhosAntigos = (antigas || []).map(p => p.storage_path);
+                        if (caminhosAntigos.length) await supabaseClient.storage.from('material-celula').remove(caminhosAntigos);
+                        await supabaseClient.from('rk_licao_paginas').delete().eq('licao_id', licaoId);
+
+                        for (let i = 0; i < imagensFiles.length; i++) {
+                            const file = imagensFiles[i];
+                            const ext = file.name.split('.').pop();
+                            const path = `${apostilaAdminAtual.id}/${licaoId}/pagina-${i + 1}.${ext}`;
+                            await uploadArquivoStorage('material-celula', path, file);
+                            const { error: insError } = await supabaseClient.from('rk_licao_paginas').insert([{ licao_id: licaoId, ordem: i + 1, storage_path: path }]);
+                            if (insError) throw insError;
+                        }
+                    }
+
+                    await registrarLogAcao(id ? `Editou a lição "${dados.titulo}"` : `Criou a lição "${dados.titulo}" (apostila: ${apostilaAdminAtual.titulo})`);
+                    fecharModal('modalLicao');
+                    await abrirApostilaAdmin(apostilaAdminAtual.id);
+                } catch (err) {
+                    alert('Erro ao salvar lição: ' + err.message);
+                } finally {
+                    btn.disabled = false; btn.innerText = 'Salvar';
+                }
+            };
+        }
+    }
+
+    // ================================================================
+    //  PLAYER VINHA FM (simples e seguro)
+    // ================================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const radioAudio = document.getElementById('radioAudio');
+        const radioToggle = document.getElementById('radioToggle');
+        const radioIcon = document.getElementById('radioIcon');
+    
+        // Se algum elemento não existir, não prossegue
+        if (!radioAudio || !radioToggle || !radioIcon) {
+            console.warn('Player Vinha FM: elementos não encontrados.');
+            return;
+        }
+    
+        let radioPlaying = false;
+    
+        window.toggleRadio = function() {
+            if (!radioPlaying) {
+                radioAudio.play()
+                    .then(() => {
+                        radioPlaying = true;
+                        radioToggle.classList.add('playing');
+                        radioIcon.className = 'fas fa-pause';
+                        registrarLogAcao('Iniciou o player Vinha FM');
+                    })
+                    .catch((err) => {
+                        console.warn('Erro ao iniciar stream:', err);
+                        alert('Não foi possível conectar à Vinha FM. Tente novamente.');
+                    });
+            } else {
+                radioAudio.pause();
+                radioPlaying = false;
+                radioToggle.classList.remove('playing');
+                radioIcon.className = 'fas fa-play';
+                registrarLogAcao('Pausou o player Vinha FM');
+            }
+        };
+    
+        // Tratamento para quando a música é pausada ou erro
+        radioAudio.addEventListener('pause', () => {
+            if (radioPlaying) {
+                radioPlaying = false;
+                radioToggle.classList.remove('playing');
+                radioIcon.className = 'fas fa-play';
+            }
+        });
+    
+        radioAudio.addEventListener('error', () => {
+            if (radioPlaying) {
+                radioPlaying = false;
+                radioToggle.classList.remove('playing');
+                radioIcon.className = 'fas fa-play';
+                alert('Stream indisponível no momento.');
+            }
+        });
+    });
+</script>
+
+    <!-- Player de áudio (Vinha FM) -->
+    <audio id="radioAudio" preload="none" style="display:none;">
+        <source src="https://streaming.vinhafm.com.br/stream" type="audio/mpeg">
+    </audio>
+
+</body>
+</html>

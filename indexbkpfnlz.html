@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Videira Jataí - Rede Kids</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="shortcut icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Sistema Videira Kids">
+    <meta name="apple-mobile-web-app-title" content="Sistema Videira Kids">
+    <meta name="theme-color" content="#f8f0ec"> 
+    <link rel="manifest" href="manifest.json">
+
+    <script src="config.js"></script>
+  
+    <style>
+        /* Cores suaves para o público feminino / Rede Kids */
+        :root {
+            --primary: #8b5a6a;
+            --primary-hover: #7a4d5a;
+            --bg-color: #fcf7f5;
+            --text-main: #4a3b3e;
+            --text-light: #7a6a6e;
+            --input-bg: #fdfaf9;
+            --border-color: #e6dcd8;
+            --danger-text: #b34a4a;
+        }
+
+        body, html { height: 100%; overflow: hidden; background: var(--bg-color); }
+        
+        #tela-login {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 10; transition: opacity 0.5s ease;
+        }
+
+        .card-login {
+            background: #ffffff; padding: 40px 35px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); width: 90%; max-width: 380px; text-align: center;
+            max-height: 95vh; overflow-y: auto;
+        }
+
+        .logo { width: 100px; height: auto; margin-bottom: 15px; }
+        h2 { color: var(--primary); font-size: 22px; margin-bottom: 6px; font-weight: 700; }
+        p.subtitulo { color: var(--text-light); font-size: 14px; margin-bottom: 35px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+        
+        input[type="text"], input[type="password"], input[type="email"], input[type="tel"] {
+            width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: 12px;
+            font-size: 15px; color: var(--text-main); outline: none; transition: 0.3s; background-color: var(--input-bg);
+            box-sizing: border-box;
+        }
+        input:focus { 
+            border-color: var(--primary); background-color: #ffffff; 
+        }
+
+        button {
+            width: 100%; padding: 16px; margin-top: 10px; background-color: var(--primary); color: #ffffff;
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            box-sizing: border-box;
+        }
+        button:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        button:disabled { background-color: #c9a7b3; cursor: not-allowed; }
+        
+        .btn-secondary { background-color: #ffffff; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-secondary:hover { background-color: #fdf8f6; transform: translateY(0); }
+
+        .btn-link { background: none; border: none; color: var(--primary); font-size: 13px; text-decoration: underline; cursor: pointer; padding: 5px; margin-top: 10px; width: 100%; }
+        .btn-link:hover { color: var(--primary-hover); }
+
+        .mensagem-erro { color: var(--danger-text); font-size: 14px; margin-top: 20px; display: none; font-weight: 500; background: #fdf0ee; padding: 10px; border-radius: 8px; border: 1px solid #f5d6d2; }
+
+        #splash-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            background: var(--bg-color);
+            z-index: 5; opacity: 0; transition: opacity 0.4s ease;
+        }
+        .splash-logo { width: 120px; animation: pulse 1.5s infinite ease-in-out; }
+        #splash-screen p { margin-top: 25px; color: var(--text-main); font-size: 15px; font-weight: 600; }
+
+        @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+        
+        .bloco { display: none; }
+        .bloco.ativo { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <script>
+        // Se houver algum Service Worker antigo controlando a página, desregistra ele imediatamente
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        // Limpa os caches armazenados pelo PWA
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+    </script>
+
+    <div id="tela-login">
+        <div class="card-login">
+            
+            <div id="bloco-login" class="bloco ativo">
+                 <img src="logo.png" style="width: 100px; border-radius: 50%;" alt="Logo Kids">
+                <h2 id="titulo-login">Bem-vinda</h2>
+                <p class="subtitulo" id="subtitulo-login">Sistema de Células - Kids</p>
+                
+                <div id="area-form">
+                    <div class="input-group">
+                        <label>Usuário ou e-mail</label>
+                        <input type="text" id="usuario-input" placeholder="Usuário" onkeypress="verificarEnter(event, 'login')" autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label>Senha (Somente Números)</label>
+                        <input type="password" 
+                               id="senha-input" 
+                               inputmode="numeric" 
+                               pattern="[0-9]*" 
+                               placeholder="••••••" 
+                               onkeypress="verificarEnter(event, 'login')"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                    
+                    <button id="btn-entrar" onclick="verificarLogin()">Entrar no Sistema</button>
+                    <p id="mensagem-erro" class="mensagem-erro">⚠️ Usuário ou senha incorretos.</p>
+                    
+                    <button class="btn-link" onclick="mudarTela('bloco-recuperar')">Esqueci minha senha</button>
+                </div>
+
+                <div id="area-escolha" style="display: none;">
+                    <div id="botoes-painel"></div>
+                    <button class="btn-secondary" onclick="sair()" style="margin-top: 15px; padding: 10px; font-size: 14px;">Sair / Trocar Usuário</button>
+                </div>
+            </div>
+
+            <div id="bloco-recuperar" class="bloco">
+                <!--<img src="https://img.linkme.bio/img/2021/05/10141826/logo-videira-circulo-1.png" alt="Logo Videira" class="logo" style="width: 70px;">-->
+                <img src="logo.png" alt="Logo Videira" class="logo" style="width: 70px;">
+                <h2>Recuperar Senha</h2>
+                <p class="subtitulo" style="margin-bottom: 20px;">Informe seu e-mail para receber o link.</p>
+                
+                <div class="input-group">
+                    <label>Seu E-mail Cadastrado *</label>
+                    <input type="email" id="rec-email" placeholder="Digite seu e-mail" onkeypress="verificarEnter(event, 'recuperar')">
+                </div>
+                
+                <button id="btn-recuperar" onclick="enviarRecuperacao()">Enviar Link</button>
+                <p id="mensagem-erro-rec" class="mensagem-erro"></p>
+                
+                <button class="btn-secondary" onclick="mudarTela('bloco-login')" style="margin-top: 15px; padding: 10px; font-size: 14px;">Voltar para o Login</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="splash-screen">
+        <!--<img src="https://img.linkme.bio/img/2021/05/10141826/logo-videira-circulo-1.png" alt="Carregando" class="splash-logo">-->
+        <img src="logo.png" alt="Carregando" class="splash-logo">        
+        <p id="splash-texto">Autenticando e carregando painel...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        function mudarTela(idBloco) {
+            document.querySelectorAll('.bloco').forEach(b => b.classList.remove('ativo'));
+            document.getElementById(idBloco).classList.add('ativo');
+            document.querySelectorAll('.mensagem-erro').forEach(msg => msg.style.display = 'none');
+        }
+
+        function normalizarCategoria(cat) {
+            return (cat || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+     
+        async function verificarLogin() {
+            const entrada = document.getElementById('usuario-input').value.trim().toLowerCase();
+            const senhaDigitada = document.getElementById('senha-input').value.trim();
+            const erro = document.getElementById('mensagem-erro');
+            const btn = document.getElementById('btn-entrar');
+        
+            if(!entrada || !senhaDigitada) { 
+                erro.innerText = "⚠️ Preencha usuário/e-mail e senha."; 
+                erro.style.display = 'block'; 
+                return; 
+            }
+        
+            btn.innerText = "Autenticando..."; 
+            btn.disabled = true; 
+            erro.style.display = 'none';
+        
+            let emailParaLogin = entrada;
+        
+            // Se não digitou um e-mail, resolve o 'usuario' para o e-mail correspondente
+            // usando uma função RPC (SECURITY DEFINER), que funciona mesmo SEM sessão ativa
+            // — diferente de uma consulta direta na tabela rk_pessoas, que é bloqueada por RLS antes do login.
+            if (!entrada.includes('@')) {
+                const { data: emailEncontrado, error: rpcError } = await supabaseClient
+                    .rpc('buscar_email_por_usuario_kids', { usuario_busca: entrada });
+        
+                if (rpcError || !emailEncontrado) {
+                    erro.innerText = "⚠️ Usuário não encontrado.";
+                    erro.style.display = 'block';
+                    btn.innerText = "Entrar no Sistema"; 
+                    btn.disabled = false;
+                    return;
+                }
+                emailParaLogin = emailEncontrado;
+            }
+        
+            const { data: loginData, error: loginError } = await supabaseClient.auth.signInWithPassword({
+                email: emailParaLogin,
+                password: senhaDigitada
+            });
+        
+            if (loginError) {
+                erro.innerText = "⚠️ E-mail ou senha incorretos.";
+                erro.style.display = 'block';
+                document.getElementById('senha-input').value = "";
+                btn.innerText = "Entrar no Sistema"; 
+                btn.disabled = false;
+                return;
+            }
+        
+            // Agora sim, já autenticado, essa consulta é liberada pela RLS
+            const { data: pessoa } = await supabaseClient
+                .from('rk_pessoas')
+                .select('nome, categoria')
+                .eq('email', emailParaLogin)
+                .maybeSingle();
+        
+            if (!pessoa) {
+                erro.innerText = "⚠️ Registro não encontrado na base de dados.";
+                erro.style.display = 'block';
+                btn.innerText = "Entrar no Sistema"; 
+                btn.disabled = false;
+                return;
+            }
+        
+            const nomeReal = pessoa.nome;
+            const categoriaNormalizada = normalizarCategoria(pessoa.categoria);
+        
+            // Registrar log
+            registrarLog(entrada, nomeReal, "Fez login no sistema");
+        
+            // Salvar informações na sessão
+            sessionStorage.setItem('usuarioLogado', nomeReal);
+            sessionStorage.setItem('loginDigitado', emailParaLogin);
+            sessionStorage.setItem('urlApi', urlBackend);
+            sessionStorage.setItem('categoria', categoriaNormalizada);
+        
+            // Redirecionamento conforme categoria (MANTIDO IGUAL AO ORIGINAL)
+            let paginas = [];
+            if (categoriaNormalizada === 'administrador') {
+                paginas = [
+                    { nome: "Painel Admin", url: "admin" },
+                    { nome: "Painel Pastoral", url: "pastor" },
+                    { nome: "Painel Discipulador", url: "discipulador" },
+                    { nome: "Painel do Líder", url: "lider" }
+                   // { nome: "Financeiro PC", url: "financeiro" },
+                   // { nome: "Financeiro Mobile", url: "financeiromobile" },
+                   // { nome: "Área do Membro", url: "membro" }
+                ];
+            } else if (['pastor de governo', 'pastor de rede', 'pastor'].includes(categoriaNormalizada)) {
+                paginas = [{ nome: "Painel Pastoral", url: "pastor" }];
+            } else if (categoriaNormalizada === 'discipulador') {
+                paginas = [{ nome: "Painel Discipulador", url: "discipulador" }];
+            } else if (categoriaNormalizada === 'líder' || categoriaNormalizada === 'lider') {
+                paginas = [{ nome: "Painel do Líder", url: "lider" }];
+            } else if (categoriaNormalizada === 'tesoureiro') {
+                paginas = [
+                    { nome: "Financeiro PC", url: "financeiro" },
+                    { nome: "Financeiro Mobile", url: "financeiromobile" }
+                ];
+            } else if (categoriaNormalizada === 'membro') {
+                paginas = [{ nome: "Área do Membro", url: "membro" }];
+            } else {
+                // Fallback
+                paginas = [{ nome: "Área do Membro", url: "membro" }];
+            }
+        
+            const urlsPermitidas = paginas.map(p => p.url);
+            sessionStorage.setItem('paginasPermitidas', JSON.stringify(urlsPermitidas));
+        
+            if (paginas.length === 1) {
+                entrarNoPainel(nomeReal, paginas[0].url);
+            } else {
+                document.getElementById('area-form').style.display = 'none';
+                document.getElementById('area-escolha').style.display = 'block';
+                document.getElementById('titulo-login').innerText = `Olá, ${nomeReal}`;
+                document.getElementById('subtitulo-login').innerText = "Escolha o painel:";
+        
+                const divBotoes = document.getElementById('botoes-painel');
+                divBotoes.innerHTML = '';
+                paginas.forEach(pag => {
+                    let b = document.createElement('button');
+                    b.innerText = pag.nome;
+                    b.onclick = () => entrarNoPainel(nomeReal, pag.url);
+                    divBotoes.appendChild(b);
+                });
+            }
+        }
+
+        function entrarNoPainel(nome, urlDestino) {
+            const telaLogin = document.getElementById('tela-login');
+            const splashScreen = document.getElementById('splash-screen');
+            document.getElementById('splash-texto').innerText = `Carregando...`;
+
+            telaLogin.style.opacity = '0'; 
+            setTimeout(() => {
+                telaLogin.style.display = 'none';
+                splashScreen.style.display = 'flex';
+                setTimeout(() => splashScreen.style.opacity = '1', 10);
+                setTimeout(() => {
+                    window.location.href = urlDestino + ".html?t=" + Date.now();
+                }, 1000);
+            }, 400);
+        }
+
+        async function registrarLog(usuarioDigitado, nomeReal, acaoRealizada) {
+            const dataHoraAtual = new Date().toISOString();
+            try {
+                await supabaseClient.from('rk_logs').insert([{
+                    datahora: dataHoraAtual,
+                    usuario: usuarioDigitado,
+                    nomelider: nomeReal,
+                    acao: acaoRealizada
+                }]);
+            } catch (e) {
+                console.error("Erro ao registrar log:", e);
+            }
+        }
+
+        function sair() {
+            sessionStorage.clear();
+            document.getElementById('area-escolha').style.display = 'none';
+            document.getElementById('area-form').style.display = 'block';
+            document.getElementById('titulo-login').innerText = "Bem-vindo(a)";
+            document.getElementById('subtitulo-login').innerText = "Acesse o seu painel";
+            document.getElementById('usuario-input').value = "";
+            document.getElementById('senha-input').value = "";
+            document.getElementById('btn-entrar').innerText = "Entrar no Sistema";
+            document.getElementById('btn-entrar').disabled = false;
+        }
+
+        async function enviarRecuperacao() {
+            const email = document.getElementById('rec-email').value.trim();
+            const btn = document.getElementById('btn-recuperar');
+            const erro = document.getElementById('mensagem-erro-rec');
+
+            if (!email) {
+                erro.innerText = "⚠️ Informe seu e-mail cadastrado.";
+                erro.style.display = 'block';
+                return;
+            }
+
+            btn.innerText = "Processando...";
+            btn.disabled = true;
+            erro.style.display = 'none';
+
+            try {
+                const urlDestino = window.location.origin + "/sistemakids/nova-senha.html";
+                const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: urlDestino,
+                });
+                if (error) throw error;
+
+                alert("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+                document.getElementById('rec-email').value = "";
+                mudarTela('bloco-login');
+            } catch (e) {
+                erro.innerText = "⚠️ Erro: " + e.message;
+                erro.style.display = 'block';
+            } finally {
+                btn.innerText = "Enviar Link";
+                btn.disabled = false;
+            }
+        }
+
+        function verificarEnter(event, contexto) { 
+            if (event.key === "Enter") {
+                if(contexto === 'login') verificarLogin();
+                else if(contexto === 'recuperar') enviarRecuperacao();
+            } 
+        }
+    </script>
+</body>
+</html>

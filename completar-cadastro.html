@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Completar Cadastro • Rede Kids</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="shortcut icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#f8f0ec">
+
+    <style>
+        :root {
+            --primary: #8b5a6a;
+            --primary-hover: #7a4d5a;
+            --bg-color: #fcf7f5;
+            --text-main: #4a3b3e;
+            --text-light: #7a6a6e;
+            --input-bg: #fdfaf9;
+            --border-color: #e6dcd8;
+            --danger-text: #b34a4a;
+            --success-text: #2d6a4f;
+        }
+
+        body, html { height: 100%; overflow: hidden; background: var(--bg-color); }
+        .container { display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        h2 { color: var(--primary); margin-top: 0; margin-bottom: 5px; font-weight: 700; }
+        p.subtitulo { color: var(--text-light); font-size: 14px; margin-bottom: 25px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        input:focus, select:focus { border-color: var(--primary); background: white; outline: none; box-shadow: 0 0 0 3px rgba(139, 90, 106, 0.1); }
+        button { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        button:hover { background-color: var(--primary-hover); }
+        button:disabled { background-color: #c9a7b3; cursor: not-allowed; }
+        .mensagem-erro { color: var(--danger-text); font-size: 13px; margin-top: 15px; display: none; background: #fdf0ee; padding: 10px; border-radius: 8px; border: 1px solid #f5d6d2; }
+        .sucesso-msg { color: var(--success-text); font-size: 13px; margin-top: 15px; display: none; background: #d1e7dd; padding: 10px; border-radius: 8px; border: 1px solid #b8d9c0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2 id="titulo-cadastro">Complete seu Cadastro</h2>
+            <p class="subtitulo" id="subtitulo-cadastro">Carregando...</p>
+
+            <div id="area-form" style="display: none;">
+                <div class="input-group">
+                    <label>Usuário (definido pelo administrador)</label>
+                    <input type="text" id="usuario" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Categoria</label>
+                    <input type="text" id="categoria" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Seu Nome Completo *</label>
+                    <input type="text" id="nomeCompleto" placeholder="Digite seu nome completo" required>
+                </div>
+                <div class="input-group">
+                    <label>Seu E-mail *</label>
+                    <input type="email" id="email" placeholder="exemplo@igreja.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Senha (6 dígitos numéricos) *</label>
+                    <input type="password" id="senha" inputmode="numeric" pattern="[0-9]*" placeholder="Digite 6 números" required maxlength="6">
+                </div>
+                <div class="input-group" id="grupo-superior">
+                    <label>Seu Superior Hierárquico</label>
+                    <select id="superior_id">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+
+                <button id="btn-salvar" onclick="finalizarCadastro()">Salvar e Acessar o Sistema</button>
+                <div id="mensagem-erro" class="mensagem-erro"></div>
+            </div>
+
+            <div id="div-sucesso" class="sucesso-msg" style="display: none;">
+                Cadastro concluído! Redirecionando para o login...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  CONFIGURAÇÃO SUPABASE (tabelas com prefixo rk_)
+        // ============================================================
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Garantir que as variáveis globais do config.js estejam disponíveis
+        // (SUPABASE_URL e SUPABASE_ANON_KEY já estão definidas em config.js)
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        let pessoaId = null;
+        let categoriaPessoa = '';
+        let superiorOriginalId = null;
+
+        // ============================================================
+        //  CARREGAR DADOS DO TOKEN
+        // ============================================================
+        async function carregarDados() {
+            if (!token) {
+                document.getElementById('subtitulo-cadastro').innerText = 'Token inválido ou link expirado.';
+                return;
+            }
+
+            const { data: pessoa, error } = await supabaseClient
+                .from('rk_pessoas')                         // tabela adaptada
+                .select('id, usuario, categoria, superior_id')
+                .eq('token_convite', token)
+                .maybeSingle();
+
+            if (error || !pessoa) {
+                document.getElementById('subtitulo-cadastro').innerText = 'Link inválido ou já utilizado.';
+                return;
+            }
+
+            pessoaId = pessoa.id;
+            superiorOriginalId = pessoa.superior_id;
+            categoriaPessoa = (pessoa.categoria || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            document.getElementById('usuario').value = pessoa.usuario || 'Não definido';
+            document.getElementById('categoria').value = pessoa.categoria;
+            document.getElementById('subtitulo-cadastro').innerText = 'Preencha os campos para criar seu acesso.';
+            document.getElementById('area-form').style.display = 'block';
+
+            // Carrega o select de superiores baseado na categoria da pessoa
+            await carregarSuperiores(pessoa.categoria, pessoa.superior_id);
+        }
+
+        // ============================================================
+        //  CARREGAR SUPERIORES (baseado na hierarquia Rede Kids)
+        // ============================================================
+        async function carregarSuperiores(categoria, superiorIdAtual) {
+            const select = document.getElementById('superior_id');
+            const grupo = document.getElementById('grupo-superior');
+
+            // Mapeamento de categorias para a lista de categorias superiores permitidas
+            // Hierarquia Rede Kids: Pastora > Discipuladora > Líder > Líder em Treinamento (e Criança não tem superior)
+            let categoriasSuperiores = [];
+            const cat = categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            if (cat === 'pastora') {
+                // Pastora só pode ter superior se for administrador (mas normalmente não)
+                categoriasSuperiores = ['administrador'];
+            } else if (cat === 'discipuladora') {
+                categoriasSuperiores = ['pastora'];
+            } else if (cat === 'líder' || cat === 'lider') {
+                categoriasSuperiores = ['discipuladora'];
+            } else if (cat === 'líder em treinamento' || cat === 'lider em treinamento') {
+                categoriasSuperiores = ['líder', 'discipuladora'];
+            } else {
+                // Para outras categorias (ex: criança), não mostramos superior
+                grupo.style.display = 'none';
+                return;
+            }
+
+            const { data: superiores, error } = await supabaseClient
+                .from('rk_pessoas')
+                .select('id, nome, categoria')
+                .in('categoria', categoriasSuperiores)
+                .order('nome');
+
+            if (error || !superiores || superiores.length === 0) {
+                grupo.style.display = 'none';
+                return;
+            }
+
+            select.innerHTML = '<option value="">Selecione...</option>';
+            superiores.forEach(s => {
+                const selected = (s.id === superiorIdAtual) ? 'selected' : '';
+                select.innerHTML += `<option value="${s.id}" ${selected}>${s.nome || s.usuario} (${s.categoria})</option>`;
+            });
+            grupo.style.display = 'block';
+        }
+
+        // ============================================================
+        //  REGISTRAR LOG (rk_logs)
+        // ============================================================
+        async function registrarLogCompletarCadastro(nome, email) {
+            try {
+                await supabaseClient.from('rk_logs').insert([{
+                    datahora: new Date().toISOString(),
+                    usuario: email,
+                    nomelider: nome,
+                    acao: 'Completou o cadastro no sistema'
+                }]);
+            } catch (e) {
+                console.error("Erro ao registrar log de cadastro:", e);
+            }
+        }
+
+        // ============================================================
+        //  FINALIZAR CADASTRO
+        // ============================================================
+        async function finalizarCadastro() {
+            const nomeCompleto = document.getElementById('nomeCompleto').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value.trim();
+            const erro = document.getElementById('mensagem-erro');
+            const btn = document.getElementById('btn-salvar');
+            const grupoSuperior = document.getElementById('grupo-superior');
+            const selectSuperior = document.getElementById('superior_id');
+
+            let superiorId = (selectSuperior && !grupoSuperior.classList.contains('hidden')) 
+                                ? (selectSuperior.value || null) 
+                                : null;
+            if (!superiorId) {
+                superiorId = superiorOriginalId;
+            }
+
+            if (!nomeCompleto || !email || !senha) {
+                erro.innerText = 'Todos os campos com * são obrigatórios.';
+                erro.style.display = 'block';
+                return;
+            }
+            if (senha.length < 6 || !/^\d+$/.test(senha)) {
+                erro.innerText = 'A senha deve ter 6 dígitos numéricos.';
+                erro.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Salvando...';
+            erro.style.display = 'none';
+
+            try {
+                // 1. Criar usuário no Supabase Auth
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: senha,
+                    options: { data: { token_convite: token } }
+                });
+
+                if (authError) {
+                    erro.innerText = 'Erro ao criar conta: ' + authError.message;
+                    erro.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerText = "Salvar e Acessar o Sistema";
+                    return;
+                }
+
+                // 2. Atualizar a tabela rk_pessoas com o e-mail, superior e limpar token
+                const { error: updateError } = await supabaseClient
+                    .from('rk_pessoas')
+                    .update({
+                        nome: nomeCompleto,
+                        email: email,
+                        superior_id: superiorId,
+                        token_convite: null
+                    })
+                    .eq('id', pessoaId);
+                if (updateError) throw updateError;
+
+                // 3. Registrar log de conclusão de cadastro
+                await registrarLogCompletarCadastro(nomeCompleto, email);
+
+                // Sucesso
+                document.getElementById('area-form').style.display = 'none';
+                document.getElementById('div-sucesso').style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = "index.html?t=" + Date.now();
+                }, 2000);
+
+            } catch (e) {
+                erro.innerText = 'Erro: ' + e.message;
+                erro.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Salvar e Acessar o Sistema';
+            }
+        }
+
+        // ============================================================
+        //  INICIAR//
+        // ============================================================
+        carregarDados();
+    </script>
+</body>
+</html>
