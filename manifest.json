@@ -1,20 +1,40 @@
 {
-  "name": "Células Kids",
+  "id": "./",
+  "name": "Células Kids - Videira Jataí",
   "short_name": "Células Kids",
+  "description": "Sistema de Células Kids da Igreja Videira Jataí",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "theme_color": "#0f172a",
-  "background_color": "#f1f5f9",
+  "orientation": "portrait",
+  "theme_color": "#8b5a6a",
+  "background_color": "#fcf7f5",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "logo.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

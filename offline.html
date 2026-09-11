@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Células Kids - Sem conexão</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #fcf7f5;
+            color: #4a3b3e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+        }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px 28px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        }
+        img { width: 96px; border-radius: 50%; margin-bottom: 18px; }
+        h1 { color: #8b5a6a; font-size: 20px; margin-bottom: 10px; }
+        p { color: #7a6a6e; font-size: 14px; line-height: 1.5; margin-bottom: 22px; }
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #8b5a6a;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="logo.png" alt="Células Kids">
+        <h1>Você está sem conexão</h1>
+        <p>Verifique sua internet. As telas já visitadas continuam disponíveis e sincronizam quando você voltar a ficar online.</p>
+        <button onclick="window.location.reload()">Tentar novamente</button>
+    </div>
+</body>
+</html>
