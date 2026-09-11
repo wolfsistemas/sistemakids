@@ -1,0 +1,19 @@
+# Dependencias / build
+node_modules/
+dist/
+build/
+
+# Supabase (segredos e cache local)
+supabase/.temp/
+supabase/.branches/
+supabase/.secrets
+supabase/.env
+.env
+.env.*
+
+# Ambiente da plataforma
+.monkeycode-tmp-files/
+
+# Sistema
+.DS_Store
+Thumbs.db
