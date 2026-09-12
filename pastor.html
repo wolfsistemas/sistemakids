@@ -1194,6 +1194,7 @@
     let listaAgenda = [];
     let palavraAtual = null;
     let mapaNomes = {};
+    let mapaCelulas = {};
     let todasCriancas = [];
     let listaApostilas = [];
     let apostilaAdminAtual = null;
@@ -1275,6 +1276,8 @@
                 .order('nome');
             if (celError) throw celError;
             todasCelulas = celulas || [];
+            mapaCelulas = {};
+            todasCelulas.forEach(c => mapaCelulas[c.id] = c.nome);
 
             // 2. Buscar todas as pessoas (para nomes de líderes, discipuladoras, etc.)
             const { data: pessoas, error: pError } = await supabaseClient
@@ -1536,7 +1539,7 @@
         }
 
         filtrados.forEach(r => {
-            const nomeCel = window.celulaMap?.[r.celula_id] || mapaNomes[r.celula_id] || 'Célula não encontrada';
+            const nomeCel = mapaCelulas[r.celula_id] || 'Célula não encontrada';
             const dataF = r.data ? r.data.split('-').reverse().join('/') : '';
             const card = document.createElement('div');
             card.className = 'celula-card';
@@ -1579,7 +1582,7 @@
             }
         });
 
-        document.getElementById('detalheRelCelula').innerText = window.celulaMap?.[rel.celula_id] || mapaNomes[rel.celula_id] || 'Célula não encontrada';
+        document.getElementById('detalheRelCelula').innerText = mapaCelulas[rel.celula_id] || 'Célula não encontrada';
         document.getElementById('detalheRelData').innerText = rel.data?.split('-').reverse().join('/');
         document.getElementById('detalheRelTotal').innerText = presentes.length;
         document.getElementById('detalheRelQuebra').innerText = rel.quebra_gelo || '-';
