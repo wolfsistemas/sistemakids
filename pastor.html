@@ -876,11 +876,71 @@
         }
         .licao-acoes { display: flex; gap: 6px; }
 
+        /* --- Ficha de célula (relatório / impressão) --- */
+        .ficha-celula {
+            border: 1px solid #e6dcd8;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
+            page-break-after: always;
+            page-break-inside: avoid;
+        }
+        .ficha-celula:last-child { page-break-after: auto; }
+        .ficha-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+            background: #f9f5f3;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.85rem;
+        }
+        .ficha-info strong { color: #555; }
+        .tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+        .tag-sim { background: var(--success-bg); color: var(--success-text); }
+        .tag-nao { background: #f8d7da; color: #721c24; }
+
+        /* Cabeçalho/rodapé só aparecem na impressão */
+        .np-print-header, .np-print-footer { display: none; }
+
         @media print {
+            @page { margin: 12mm; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
             .modal-content, .modal-content * { visibility: visible; }
-            .modal-content { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 20px; border-radius: 0; }
-            .btn-close-modal, .btn-card, .nav-menu, .header { display: none !important; }
+            .modal-content {
+                position: absolute; left: 0; top: 0;
+                width: 100%; max-width: 100%;
+                height: auto; max-height: none;
+                padding: 0; margin: 0; border-radius: 0; box-shadow: none;
+            }
+            .btn-close-modal, .btn-card, .nav-menu, .header, .filter-bar { display: none !important; }
+
+            .np-print-header {
+                display: flex !important;
+                align-items: center;
+                gap: 14px;
+                border-bottom: 3px solid var(--primary);
+                padding-bottom: 12px;
+                margin-bottom: 18px;
+            }
+            .np-print-header img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; }
+            .np-print-title { color: var(--primary); font-size: 20px; font-weight: 800; letter-spacing: 0.5px; }
+            .np-print-subtitle { color: #555; font-size: 12px; margin-top: 2px; }
+            .np-print-footer {
+                display: block !important;
+                margin-top: 24px; padding-top: 10px;
+                border-top: 1px solid #ddd;
+                text-align: center; font-size: 10px; color: #888;
+            }
+
+            h2#tituloRelatorioPersonalizado { color: var(--primary) !important; }
+
+            .table-clean { width: 100% !important; border-collapse: collapse !important; box-shadow: none !important; border-radius: 0 !important; }
+            .table-clean th { background: var(--primary) !important; color: #fff !important; padding: 8px !important; font-size: 11px !important; text-align: left; }
+            .table-clean td { padding: 7px 8px !important; border-bottom: 1px solid #e5e5e5 !important; font-size: 11px !important; }
+            .table-clean tr:nth-child(even) td { background: #faf7f8 !important; }
+            .ficha-tabela tr { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -984,7 +1044,15 @@
                     <h2 id="tituloRelatorioPersonalizado" style="color:var(--primary); margin:0;">Relatório</h2>
                     <button onclick="imprimirRelatorio()" class="btn-card" style="width:auto; padding:8px 15px; background:var(--primary); color:white; border:none;"><i class="fas fa-print"></i> Imprimir</button>
                 </div>
+                <div class="np-print-header">
+                    <img src="logo.png" alt="Rede Kids">
+                    <div>
+                        <div class="np-print-title">Rede Kids • Videira</div>
+                        <div class="np-print-subtitle" id="printReportTitle">Relatório</div>
+                    </div>
+                </div>
                 <div id="conteudoRelatorio"></div>
+                <div class="np-print-footer">Documento gerado pelo sistema Rede Kids • Videira em <span id="printGeradoEm"></span></div>
             </div>
         </div>
     </div>
@@ -2120,11 +2188,14 @@
     }
 
     function imprimirRelatorio() {
+        const el = document.getElementById('printGeradoEm');
+        if (el) el.innerText = new Date().toLocaleString();
         window.print();
     }
 
     function mostrarRelatorioPersonalizado(titulo, conteudoHTML) {
         document.getElementById('tituloRelatorioPersonalizado').innerText = titulo;
+        document.getElementById('printReportTitle').innerText = titulo;
         document.getElementById('conteudoRelatorio').innerHTML = conteudoHTML;
         document.getElementById('modalRelatorioPersonalizado').classList.remove('hidden');
     }
@@ -2200,7 +2271,7 @@
         registrarLogAcao(`Exportou a rede em PDF (${lista.length} registros)`);
     }
 
-    // 1. Supervisão Geral
+    // 1. Supervisão Geral (Fichas das Células)
     async function gerarSupervisaoGeral() {
         // Buscar dados atualizados
         const { data: celulas } = await supabaseClient.from('rk_celulas').select('*');
@@ -2221,48 +2292,64 @@
             }
         });
 
-        let html = `
-        <div style="font-family: 'Inter', sans-serif;">
-            <div style="text-align:center; margin-bottom:25px;">
-                <h1 style="color:var(--primary);">Supervisão Geral – Rede Kids</h1>
-                <p>Gerado em ${new Date().toLocaleString()}</p>
-            </div>
-        `;
+        if (!celulas || celulas.length === 0) {
+            mostrarRelatorioPersonalizado('Fichas das Células', '<p style="text-align:center; color:#999;">Nenhuma célula cadastrada.</p>');
+            registrarLogAcao('Gerou Fichas das Células (nenhuma célula)');
+            return;
+        }
+
+        const simNao = v => `<span class="tag ${v === 'Sim' ? 'tag-sim' : 'tag-nao'}">${v === 'Sim' ? 'Sim' : 'Não'}</span>`;
+
+        let html = '';
         celulas.forEach(cel => {
             const lider = mapaNomes[cel.lider_user_id] || 'Não definido';
             const supervisor = mapaNomes[cel.supervisor_user_id] || 'Não definido';
-            const colider = mapaNomes[cel.colider_user_id] || '';
-            const membrosCel = membrosPorCelula[cel.id] || [];
+            const colider = mapaNomes[cel.colider_user_id] || '__________________';
+            const membrosCel = (membrosPorCelula[cel.id] || [])
+                .slice()
+                .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
             html += `
-                <div style="border:1px solid #e6dcd8; border-radius:12px; padding:20px; margin-bottom:20px; page-break-inside:avoid;">
-                    <h3 style="color:var(--primary); margin:0 0 10px 0;">${cel.nome}</h3>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px; font-size:0.9rem;">
-                        <div><strong>Líder:</strong> ${lider}</div>
-                        <div><strong>Discipuladora:</strong> ${supervisor}</div>
-                        ${colider ? `<div><strong>Líder em Trein.:</strong> ${colider}</div>` : ''}
+                <div class="ficha-celula">
+                    <div class="ficha-info">
+                        <div><strong>Nome da Célula:</strong> ${cel.nome || '-'}</div>
                         <div><strong>Dia/Horário:</strong> ${cel.dia_horario || '-'}</div>
-                        <div><strong>Endereço:</strong> ${cel.endereco || '-'}</div>
-                        <div><strong>Anfitrião:</strong> ${cel.anfitriao || '-'}</div>
-                        <div><strong>Data de Início:</strong> ${cel.data_inicio || '-'}</div>
-                        <div><strong>Acompanha adultos:</strong> ${cel.acompanha_celula_adulto || 'Não'}</div>
+                        <div><strong>Discipuladora:</strong> ${supervisor}</div>
+                        <div><strong>Líder:</strong> ${lider}</div>
+                        <div><strong>Líder em Treinamento:</strong> ${colider}</div>
+                        <div><strong>Anfitrião:</strong> ${cel.anfitriao || '__________________'}</div>
+                        <div style="grid-column:1/-1;"><strong>Endereço:</strong> ${cel.endereco || '-'}</div>
                     </div>
-                    <h4 style="margin:10px 0;">Membros (${membrosCel.length})</h4>
-                    ${membrosCel.length ? `
-                        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:8px;">
-                            ${membrosCel.map(m => `
-                                <div style="background:#f9f5f3; padding:6px 10px; border-radius:8px;">
-                                    ${m.nome} ${m.batizado === 'Sim' ? '🕊️' : ''}
-                                    <span style="font-size:0.7rem; color:var(--text-light);">${m.categoria || ''}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : '<p style="color:#999;">Nenhuma criança cadastrada.</p>'}
+                    <h4 style="color:var(--primary); margin:14px 0 8px;">Lista de Crianças (${membrosCel.length})</h4>
+                    <table class="table-clean ficha-tabela">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Batismo</th>
+                                <th>Encontro</th>
+                                <th>Líder em Trein.</th>
+                                <th>Culto Kids</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${membrosCel.length ? membrosCel.map(m => `
+                                <tr>
+                                    <td><strong>${m.nome || 'Sem nome'}</strong></td>
+                                    <td>${m.categoria || 'Criança'}</td>
+                                    <td>${simNao(m.batizado)}</td>
+                                    <td>${simNao(m.encontro)}</td>
+                                    <td>${simNao(m.lider_treinamento)}</td>
+                                    <td>${simNao(m.frequenta_culto_kids)}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="6" style="text-align:center; color:#999;">Nenhuma criança cadastrada.</td></tr>'}
+                        </tbody>
+                    </table>
                 </div>
             `;
         });
-        html += '</div>';
-        mostrarRelatorioPersonalizado('Supervisão Geral – Fichas das Células', html);
-        registrarLogAcao('Gerou Supervisão Geral');
+        mostrarRelatorioPersonalizado('Fichas das Células', html);
+        registrarLogAcao('Gerou as Fichas das Células');
     }
 
     // 2. Líderes sem relatório na semana
