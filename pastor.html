@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="config.js"></script>
     <!-- Módulo unificado da Bíblia -->
     <script src="js/biblia.js"></script>
@@ -963,6 +966,14 @@
             <button class="report-btn" onclick="abrirRelatorioStatusEspiritual()">
                 <span><i class="fas fa-cross"></i> Status espiritual das crianças</span>
                 <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="report-btn" onclick="exportarRedeExcel()">
+                <span><i class="fas fa-file-excel"></i> Exportar rede em Excel (.xlsx)</span>
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="report-btn" onclick="exportarRedePDF()">
+                <span><i class="fas fa-file-pdf"></i> Exportar rede em PDF</span>
+                <i class="fas fa-download"></i>
             </button>
         </div>
 
@@ -2118,6 +2129,77 @@
         document.getElementById('modalRelatorioPersonalizado').classList.remove('hidden');
     }
 
+    // ================================================================
+    //  EXPORTAÇÃO DA REDE (Excel / PDF)
+    // ================================================================
+    function obterPessoasRede() {
+        const ordem = { 'pastora': 1, 'discipuladora': 2, 'lider': 3, 'lider em treinamento': 4, 'crianca': 5 };
+        return todasPessoas
+            .filter(p => !p.arquivado)
+            .slice()
+            .sort((a, b) => {
+                const oa = ordem[normalizarCategoria(a.categoria)] || 99;
+                const ob = ordem[normalizarCategoria(b.categoria)] || 99;
+                if (oa !== ob) return oa - ob;
+                return (a.nome || '').localeCompare(b.nome || '');
+            });
+    }
+
+    function exportarRedeExcel() {
+        if (typeof XLSX === 'undefined') { alert('Biblioteca de Excel não carregada.'); return; }
+        const lista = obterPessoasRede();
+        if (!lista.length) { alert('Nenhum dado para exportar.'); return; }
+        const linhas = lista.map(p => ({
+            Nome: p.nome || '',
+            Categoria: p.categoria || '',
+            'Célula': mapaCelulas[p.celula_id] || '',
+            Nascimento: p.nascimento || '',
+            WhatsApp: p.telefone || '',
+            Batismo: p.batizado || 'Não',
+            Encontro: p.encontro || 'Não',
+            'Líder em Trein.': p.lider_treinamento || 'Não',
+            'Culto Kids': p.frequenta_culto_kids || 'Não'
+        }));
+        const ws = XLSX.utils.json_to_sheet(linhas);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Rede Kids');
+        XLSX.writeFile(wb, `Rede_Kids_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        registrarLogAcao(`Exportou a rede em Excel (${lista.length} registros)`);
+    }
+
+    async function exportarRedePDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) { alert('Biblioteca de PDF não carregada.'); return; }
+        const lista = obterPessoasRede();
+        if (!lista.length) { alert('Nenhum dado para exportar.'); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        try {
+            const resp = await fetch('logo.png');
+            const blob = await resp.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            await new Promise(r => { reader.onload = r; });
+            doc.addImage(reader.result, 'PNG', 14, 10, 16, 16);
+        } catch (e) { /* logo opcional */ }
+        doc.setFontSize(16);
+        doc.text('Rede Kids - Videira', 34, 16);
+        doc.setFontSize(9);
+        doc.text(`Gerado em ${new Date().toLocaleString()} | Total: ${lista.length}`, 34, 22);
+        doc.autoTable({
+            head: [['Nome', 'Categoria', 'Célula', 'Nascimento', 'WhatsApp', 'Bat.', 'Enc.', 'Líder Trein.', 'Kids']],
+            body: lista.map(p => [
+                p.nome || '', p.categoria || '', mapaCelulas[p.celula_id] || '', p.nascimento || '', p.telefone || '',
+                p.batizado || 'Não', p.encontro || 'Não', p.lider_treinamento || 'Não', p.frequenta_culto_kids || 'Não'
+            ]),
+            startY: 30,
+            theme: 'grid',
+            headStyles: { fillColor: [128, 0, 32] },
+            styles: { fontSize: 8 }
+        });
+        doc.save(`Rede_Kids_${new Date().toISOString().slice(0, 10)}.pdf`);
+        registrarLogAcao(`Exportou a rede em PDF (${lista.length} registros)`);
+    }
+
     // 1. Supervisão Geral
     async function gerarSupervisaoGeral() {
         // Buscar dados atualizados
@@ -2260,35 +2342,72 @@
     }
 
     // 4. Queda de frequência
-    function abrirRelatorioQuedaFrequencia() {
-        const ultimosRelatorios = {};
+    async function abrirRelatorioQuedaFrequencia() {
+        mostrarRelatorioPersonalizado('Células com queda de frequência', '<p style="text-align:center; color:#999;">Carregando...</p>');
+        registrarLogAcao('Visualizou relatório de queda de frequência');
+
+        // Agrupa os relatórios por célula, pegando os 4 mais recentes de cada uma
+        const relatoriosPorCelula = {};
         todosRelatorios.forEach(r => {
-            if (!ultimosRelatorios[r.celula_id]) ultimosRelatorios[r.celula_id] = [];
-            ultimosRelatorios[r.celula_id].push(r);
+            if (!relatoriosPorCelula[r.celula_id]) relatoriosPorCelula[r.celula_id] = [];
+            relatoriosPorCelula[r.celula_id].push(r);
         });
 
-        const resultado = [];
-        Object.entries(ultimosRelatorios).forEach(([celulaId, rels]) => {
+        const idsRelevantes = [];
+        const relatoriosUsados = {};
+        Object.entries(relatoriosPorCelula).forEach(([celulaId, rels]) => {
             rels.sort((a, b) => new Date(b.data) - new Date(a.data));
             const ultimos4 = rels.slice(0, 4);
             if (ultimos4.length >= 4) {
-                // Buscar contagem de presentes para cada relatório
-                const medias = ultimos4.map(r => {
-                    // A contagem será obtida via presencas, mas como não temos aqui, usamos um placeholder
-                    // Idealmente buscaríamos as presenças, mas para simplificar, usamos 0
-                    // Vamos buscar presenças para cada relatório
-                    return 0;
-                });
-                // Como não temos a contagem de presentes aqui, vou pular essa parte e mostrar uma mensagem
-                // Na prática, seria necessário buscar as presenças de cada relatório.
-                // Vou deixar um placeholder.
+                relatoriosUsados[celulaId] = ultimos4;
+                ultimos4.forEach(r => idsRelevantes.push(r.id));
             }
         });
 
-        // Versão simplificada: mostramos uma mensagem informando que a funcionalidade está em desenvolvimento
-        mostrarRelatorioPersonalizado('Células com queda de frequência', 
-            '<p style="text-align:center; color:#999;">Funcionalidade em desenvolvimento. Em breve será possível visualizar as células com queda de frequência.</p>');
-        registrarLogAcao('Visualizou relatório de queda de frequência');
+        const container = document.getElementById('conteudoRelatorio');
+        if (idsRelevantes.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--success-text);">Nenhuma célula com histórico suficiente (mínimo 4 relatórios) para análise.</p>';
+            return;
+        }
+
+        // Busca as presenças reais na tabela rk_presencas
+        const { data: presencas, error } = await supabaseClient
+            .from('rk_presencas')
+            .select('relatorio_id, presente')
+            .in('relatorio_id', idsRelevantes);
+
+        if (error) {
+            container.innerHTML = '<p style="text-align:center; color:var(--danger-text);">Erro ao carregar presenças.</p>';
+            return;
+        }
+
+        const presentesPorRelatorio = {};
+        presencas?.forEach(p => {
+            if (p.presente) presentesPorRelatorio[p.relatorio_id] = (presentesPorRelatorio[p.relatorio_id] || 0) + 1;
+        });
+
+        const resultado = [];
+        Object.entries(relatoriosUsados).forEach(([celulaId, ultimos4]) => {
+            const medias = ultimos4.map(r => presentesPorRelatorio[r.id] || 0);
+            const mediaInicial = (medias[3] + medias[2]) / 2;
+            const mediaFinal = (medias[1] + medias[0]) / 2;
+            if (mediaInicial > 0 && mediaFinal < mediaInicial * 0.7) {
+                resultado.push({
+                    nomeCelula: mapaCelulas[celulaId] || 'Célula não encontrada',
+                    mediaInicial: mediaInicial.toFixed(1),
+                    mediaFinal: mediaFinal.toFixed(1),
+                    queda: (((mediaInicial - mediaFinal) / mediaInicial) * 100).toFixed(0)
+                });
+            }
+        });
+
+        if (resultado.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--success-text);">Nenhuma célula com queda significativa de frequência.</p>';
+        } else {
+            container.innerHTML = `<table class="table-clean"><thead><tr><th>Célula</th><th>Média Antiga</th><th>Média Recente</th><th>Queda %</th></tr></thead><tbody>
+                ${resultado.map(r => `<tr><td>${r.nomeCelula}</td><td>${r.mediaInicial}</td><td>${r.mediaFinal}</td><td style="color:var(--danger-text);">${r.queda}%</td></tr>`).join('')}
+            </tbody></table>`;
+        }
     }
 
     // 5. Células sem líder em treinamento
